@@ -11,6 +11,7 @@ export interface CheckRecord {
 }
 
 const HISTORY_KEY = "@scam_radar_history";
+const ONBOARDING_KEY = "@scam_radar_onboarded";
 const MAX_HISTORY = 50;
 
 export async function loadHistory(): Promise<CheckRecord[]> {
@@ -36,6 +37,23 @@ export async function saveRecord(record: CheckRecord): Promise<void> {
 export async function clearHistory(): Promise<void> {
   try {
     await AsyncStorage.removeItem(HISTORY_KEY);
+  } catch {
+    // silent
+  }
+}
+
+export async function isOnboardingComplete(): Promise<boolean> {
+  try {
+    const val = await AsyncStorage.getItem(ONBOARDING_KEY);
+    return val === "true";
+  } catch {
+    return false;
+  }
+}
+
+export async function markOnboardingComplete(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
   } catch {
     // silent
   }

@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
+import { api } from "@/utils/api";
 
 type ScamType = "phone" | "upi" | "message";
 type ScamCategory = "UPI Fraud" | "Job Scam" | "Bank Scam" | "KYC Scam" | "OTP Fraud" | "Investment Scam" | "Lottery Scam" | "Other";
@@ -43,6 +44,8 @@ export default function ReportScreen() {
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -58,8 +61,23 @@ export default function ReportScreen() {
     if (!input.trim()) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1800));
+    setError(null);
+
+    const { data, error: apiError } = await api.submitReport({
+      type: scamType,
+      value: input.trim(),
+      category: category ?? "Other",
+      description: description.trim(),
+    });
+
+    if (apiError || !data) {
+      setError("Could not submit report. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setReportId(data.id);
     setIsSubmitting(false);
     setSubmitted(true);
   };
@@ -70,6 +88,8 @@ export default function ReportScreen() {
     setCategory(null);
     setScreenshot(null);
     setSubmitted(false);
+    setError(null);
+    setReportId(null);
   };
 
   if (submitted) {
@@ -82,13 +102,20 @@ export default function ReportScreen() {
           </View>
           <Text style={[styles.successTitle, { color: colors.foreground }]}>Report Submitted</Text>
           <Text style={[styles.successDesc, { color: colors.mutedForeground }]}>
-            Your report has been received and is under review by our moderation team. It will only affect risk scores after verification.
+            Your report is now in our moderation queue. Our admin team will review it and only verify it if it checks out. You won't be notified individually, but verified scams are broadcast to all users.
           </Text>
+          {reportId && (
+            <View style={[styles.refCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.refLabel, { color: colors.mutedForeground }]}>REPORT REFERENCE ID</Text>
+              <Text style={[styles.refId, { color: colors.primary }]}>{reportId}</Text>
+            </View>
+          )}
           <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {[
               { icon: "search", text: "Duplicate detection in progress" },
               { icon: "users", text: "User trust score evaluated" },
               { icon: "shield", text: "Admin moderation pending" },
+              { icon: "bell", text: "If verified, all users will be notified" },
             ].map((item, i) => (
               <View key={i} style={styles.infoRow}>
                 <Feather name={item.icon as any} size={13} color={colors.primary} />
@@ -130,13 +157,13 @@ export default function ReportScreen() {
         >
           <Text style={[styles.title, { color: colors.foreground }]}>Report a Scam</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            All reports are reviewed before affecting risk scores. False reports are filtered out.
+            All reports are reviewed by our admin team before affecting any risk scores.
           </Text>
 
           <View style={[styles.notice, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
             <Feather name="info" size={13} color={colors.primary} />
             <Text style={[styles.noticeText, { color: colors.mutedForeground }]}>
-              Reports go through duplicate detection, pattern clustering, and admin moderation before being verified.
+              Reports go through duplicate detection, pattern clustering, and admin moderation. Only verified reports affect risk scores. False reports are rejected and ignored.
             </Text>
           </View>
 
@@ -271,6 +298,13 @@ export default function ReportScreen() {
             )}
           </View>
 
+          {error && (
+            <View style={[styles.errorBanner, { backgroundColor: colors.riskHighBg, borderColor: colors.riskHigh + "55" }]}>
+              <Feather name="alert-circle" size={13} color={colors.riskHigh} />
+              <Text style={[styles.errorText, { color: colors.riskHigh }]}>{error}</Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[
               styles.submitBtn,
@@ -303,10 +337,7 @@ export default function ReportScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: {
-    paddingHorizontal: 18,
-    gap: 20,
-  },
+  scroll: { paddingHorizontal: 18, gap: 20 },
   successWrap: {
     flex: 1,
     alignItems: "center",
@@ -323,16 +354,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  successTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-  },
+  successTitle: { fontFamily: "Inter_700Bold", fontSize: 22 },
   successDesc: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     textAlign: "center",
     lineHeight: 21,
   },
+  refCard: {
+    width: "100%",
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: "center",
+    gap: 4,
+  },
+  refLabel: { fontFamily: "Inter_600SemiBold", fontSize: 10, letterSpacing: 0.8 },
+  refId: { fontFamily: "Inter_700Bold", fontSize: 13, letterSpacing: 0.5 },
   infoCard: {
     width: "100%",
     borderRadius: 12,
@@ -340,15 +378,8 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  infoText: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-  },
+  infoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  infoText: { fontFamily: "Inter_400Regular", fontSize: 13 },
   resetBtn: {
     width: "100%",
     paddingVertical: 14,
@@ -356,14 +387,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  resetText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
-  },
-  title: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
-  },
+  resetText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  title: { fontFamily: "Inter_700Bold", fontSize: 22 },
   subtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
@@ -384,18 +409,9 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 17,
   },
-  section: {
-    gap: 10,
-  },
-  sectionLabel: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 11,
-    letterSpacing: 0.8,
-  },
-  typeRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  section: { gap: 10 },
+  sectionLabel: { fontFamily: "Inter_600SemiBold", fontSize: 11, letterSpacing: 0.8 },
+  typeRow: { flexDirection: "row", gap: 8 },
   typeBtn: {
     flex: 1,
     flexDirection: "row",
@@ -406,10 +422,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1.5,
   },
-  typeBtnText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 12,
-  },
+  typeBtnText: { fontFamily: "Inter_500Medium", fontSize: 12 },
   inputField: {
     borderRadius: 10,
     borderWidth: 1,
@@ -418,21 +431,14 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 14,
   },
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   categoryChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
   },
-  categoryText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 12,
-  },
+  categoryText: { fontFamily: "Inter_500Medium", fontSize: 12 },
   uploadBtn: {
     borderRadius: 10,
     borderWidth: 1.5,
@@ -442,19 +448,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  uploadText: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-  },
-  screenshotWrap: {
-    position: "relative",
-    alignSelf: "flex-start",
-  },
-  screenshot: {
-    width: 120,
-    height: 120,
-    borderRadius: 10,
-  },
+  uploadText: { fontFamily: "Inter_400Regular", fontSize: 13 },
+  screenshotWrap: { position: "relative", alignSelf: "flex-start" },
+  screenshot: { width: 120, height: 120, borderRadius: 10 },
   removeBtn: {
     position: "absolute",
     top: -8,
@@ -466,6 +462,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  errorText: { fontFamily: "Inter_400Regular", fontSize: 13, flex: 1 },
   submitBtn: {
     paddingVertical: 14,
     borderRadius: 12,
@@ -473,13 +478,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
   },
-  submitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  submitText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
-  },
+  submitRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  submitText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
 });

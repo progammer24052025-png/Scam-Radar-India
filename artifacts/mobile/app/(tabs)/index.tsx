@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScam } from "@/context/ScamContext";
 import { useColors } from "@/hooks/useColors";
 import { detectInputType } from "@/utils/scamAnalyzer";
+import { isOnboardingComplete } from "@/utils/storage";
 import HistoryCard from "@/components/HistoryCard";
 
 const PLACEHOLDERS = [
@@ -60,6 +61,12 @@ export default function CheckScreen() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    isOnboardingComplete().then((done) => {
+      if (!done) router.replace("/onboarding");
+    });
+  }, []);
 
   const focusAnim = useRef(new Animated.Value(0)).current;
   const loadingAnim = useRef(new Animated.Value(0)).current;
