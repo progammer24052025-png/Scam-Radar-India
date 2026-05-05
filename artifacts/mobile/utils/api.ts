@@ -85,4 +85,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
+
+  registerUser: (uid: string, platform: string, pushToken?: string) =>
+    request<{ ok: boolean; uid: string }>("/users/register", {
+      method: "POST",
+      body: JSON.stringify({ uid, platform, pushToken }),
+    }),
 };

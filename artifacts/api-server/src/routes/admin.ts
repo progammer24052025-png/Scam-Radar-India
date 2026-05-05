@@ -2,6 +2,7 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
+import { getFirebaseUserCount } from "../lib/firebase.js";
 
 const router = Router();
 
@@ -32,10 +33,13 @@ router.post("/admin/notify", adminAuth, async (req, res) => {
   res.json({ ok: true, ...result });
 });
 
-router.get("/admin/stats", adminAuth, (_req, res) => {
+router.get("/admin/stats", adminAuth, async (_req, res) => {
   const reports = store.getReports();
   const tokens = store.getPushTokens();
   const alerts = store.getAlerts();
+
+  const firebaseCount = await getFirebaseUserCount();
+  const registeredDevices = firebaseCount !== null ? firebaseCount : tokens.length;
 
   res.json({
     totalReports: reports.length,
@@ -43,7 +47,7 @@ router.get("/admin/stats", adminAuth, (_req, res) => {
     verifiedReports: reports.filter((r) => r.status === "verified").length,
     rejectedReports: reports.filter((r) => r.status === "rejected").length,
     totalAlerts: alerts.length,
-    registeredDevices: tokens.length,
+    registeredDevices,
   });
 });
 

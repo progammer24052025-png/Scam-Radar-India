@@ -4,6 +4,7 @@ import reportsRouter from "./reports.js";
 import tokensRouter from "./tokens.js";
 import alertsRouter from "./alerts.js";
 import adminRouter from "./admin.js";
+import usersRouter from "./users.js";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(reportsRouter);
 router.use(tokensRouter);
 router.use(alertsRouter);
 router.use(adminRouter);
+router.use(usersRouter);
 
 export default router;

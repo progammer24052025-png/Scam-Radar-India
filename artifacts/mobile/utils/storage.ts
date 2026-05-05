@@ -12,6 +12,7 @@ export interface CheckRecord {
 
 const HISTORY_KEY = "@scam_radar_history";
 const ONBOARDING_KEY = "@scam_radar_onboarded";
+const DEVICE_UID_KEY = "@scam_radar_device_uid";
 const MAX_HISTORY = 50;
 
 export async function loadHistory(): Promise<CheckRecord[]> {
@@ -56,5 +57,17 @@ export async function markOnboardingComplete(): Promise<void> {
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
   } catch {
     // silent
+  }
+}
+
+export async function getOrCreateDeviceUid(): Promise<string> {
+  try {
+    const existing = await AsyncStorage.getItem(DEVICE_UID_KEY);
+    if (existing) return existing;
+    const uid = `device_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    await AsyncStorage.setItem(DEVICE_UID_KEY, uid);
+    return uid;
+  } catch {
+    return `device_${Date.now()}`;
   }
 }

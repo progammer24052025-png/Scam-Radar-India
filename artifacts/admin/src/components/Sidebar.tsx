@@ -28,17 +28,17 @@ export default function Sidebar({ onLogout }: { onLogout: () => void }) {
         {NAV.map((item) => {
           const isActive = item.path === "/" ? location === "/" : location.startsWith(item.path);
           return (
-            <Link key={item.path} href={item.path}>
-              <a
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-primary/15 text-primary font-medium border border-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                <span className="text-base w-4 text-center">{item.icon}</span>
-                {item.label}
-              </a>
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                isActive
+                  ? "bg-primary/15 text-primary font-medium border border-primary/20"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <span className="text-base w-4 text-center">{item.icon}</span>
+              {item.label}
             </Link>
           );
         })}
