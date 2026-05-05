@@ -1,0 +1,152 @@
+{
+  "reports": [],
+  "pushTokens": [
+    "ExponentPushToken[test123]"
+  ],
+  "alerts": [
+    {
+      "id": "1",
+      "title": "SBI KYC Update Scam — Nationwide",
+      "description": "Fraudsters posing as SBI officials on WhatsApp, sending fake KYC update links that redirect to credential-harvesting pages. Victims report unauthorized transactions after visiting link.",
+      "category": "Bank Scam",
+      "severity": "CRITICAL",
+      "reportCount": 2847,
+      "location": "Pan India",
+      "timeAgo": "1h ago",
+      "trend": "rising",
+      "indicators": [
+        "Fake SBI WhatsApp",
+        "Phishing URL",
+        "KYC urgency"
+      ],
+      "createdAt": 1777988565949,
+      "updatedAt": 1777988565949
+    },
+    {
+      "id": "2",
+      "title": "Work-From-Home Job Offer Surge",
+      "description": "Fake job offers promising ₹30,000–₹80,000/month for data entry work from home. Targets recent graduates and homemakers. Requires advance registration fee of ₹500–₹2,000.",
+      "category": "Job Scam",
+      "severity": "HIGH",
+      "reportCount": 1193,
+      "location": "Delhi, Mumbai, Bengaluru",
+      "timeAgo": "3h ago",
+      "trend": "rising",
+      "indicators": [
+        "Advance fee required",
+        "Unverified company",
+        "WFH promise"
+      ],
+      "createdAt": 1777981365949,
+      "updatedAt": 1777981365949
+    },
+    {
+      "id": "3",
+      "title": "UPI Collect Request Fraud",
+      "description": "Scammers sending UPI collect requests disguised as cashback or refunds. Victims who accept requests unknowingly authorize debit from their account instead of receiving credit.",
+      "category": "UPI Fraud",
+      "severity": "HIGH",
+      "reportCount": 4102,
+      "location": "All states",
+      "timeAgo": "5h ago",
+      "trend": "stable",
+      "indicators": [
+        "Fake collect request",
+        "Cashback pretext",
+        "Unknown UPI ID"
+      ],
+      "createdAt": 1777974165949,
+      "updatedAt": 1777974165949
+    },
+    {
+      "id": "4",
+      "title": "I4C Impersonation — Digital Arrest Scam",
+      "description": "Callers claiming to be I4C or CBI officers threaten 'digital arrest' for alleged illegal online activity. Demand payments of ₹50,000–₹5,00,000 to avoid arrest.",
+      "category": "Authority Impersonation",
+      "severity": "HIGH",
+      "reportCount": 867,
+      "location": "Metro cities",
+      "timeAgo": "8h ago",
+      "trend": "rising",
+      "indicators": [
+        "Arrest threat",
+        "Authority impersonation",
+        "Large payment demand"
+      ],
+      "createdAt": 1777963365949,
+      "updatedAt": 1777963365949
+    },
+    {
+      "id": "5",
+      "title": "TRAI SIM Card Disconnection Threat",
+      "description": "Automated calls claiming TRAI will disconnect SIM cards for illegal activity. Victims are transferred to fake police who demand immediate payment to retain service.",
+      "category": "Authority Impersonation",
+      "severity": "MEDIUM",
+      "reportCount": 645,
+      "location": "Tier-2 cities",
+      "timeAgo": "12h ago",
+      "trend": "stable",
+      "indicators": [
+        "SIM disconnect threat",
+        "TRAI impersonation",
+        "Automated call"
+      ],
+      "createdAt": 1777948965949,
+      "updatedAt": 1777948965949
+    },
+    {
+      "id": "6",
+      "title": "KBC Lottery SMS Wave",
+      "description": "Bulk SMS claiming lottery win of ₹25 lakh from KBC. Directs victims to call a number and pay processing fee of ₹2,000–₹10,000 via UPI to claim prize.",
+      "category": "Lottery Scam",
+      "severity": "MEDIUM",
+      "reportCount": 512,
+      "location": "Rural areas, Tier-3 cities",
+      "timeAgo": "1d ago",
+      "trend": "declining",
+      "indicators": [
+        "KBC branding",
+        "Processing fee",
+        "Bulk SMS"
+      ],
+      "createdAt": 1777905765949,
+      "updatedAt": 1777905765949
+    },
+    {
+      "id": "7",
+      "title": "AnyDesk RAT Installation Scam",
+      "description": "Scammers posing as bank customer support ask victims to install AnyDesk for 'technical assistance'. Once installed, they access the victim's banking app and transfer funds.",
+      "category": "Bank Scam",
+      "severity": "HIGH",
+      "reportCount": 378,
+      "location": "Urban areas",
+      "timeAgo": "2d ago",
+      "trend": "declining",
+      "indicators": [
+        "Remote access tool",
+        "Bank impersonation",
+        "App installation request"
+      ],
+      "createdAt": 1777819365949,
+      "updatedAt": 1777819365949
+    },
+    {
+      "id": "8",
+      "title": "Fake Investment Platform Scam",
+      "description": "WhatsApp groups promoting fake stock trading and crypto platforms offering guaranteed 3x returns. Initial small returns paid to build trust, then victims lose large deposits.",
+      "category": "Investment Scam",
+      "severity": "MEDIUM",
+      "reportCount": 289,
+      "location": "Urban, semi-urban",
+      "timeAgo": "3d ago",
+      "trend": "rising",
+      "indicators": [
+        "Guaranteed returns",
+        "WhatsApp groups",
+        "Fake platform"
+      ],
+      "createdAt": 1777732965949,
+      "updatedAt": 1777732965949
+    }
+  ]
+}
