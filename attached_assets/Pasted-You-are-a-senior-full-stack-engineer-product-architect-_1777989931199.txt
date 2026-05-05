@@ -1,0 +1,332 @@
+You are a senior full-stack engineer, product architect, and UX designer with 10+ years of experience building high-trust, large-scale applications (fintech, cybersecurity, and public safety platforms).
+
+Your task is to design and build a **production-grade web application (PWA-ready)** called:
+
+SCAM RADAR INDIA
+
+This is NOT a simple web app.
+This is a **trust-critical system** where users rely on the platform to make real financial and safety decisions.
+
+---
+
+## CORE OBJECTIVE
+
+Build a platform where users can:
+
+* Instantly verify if a phone number, UPI ID, or message is a scam
+* Understand WHY it is risky (with clear evidence)
+* Report scams safely
+* Receive real-time alerts about new scam patterns
+
+The platform must feel:
+
+* Highly trustworthy
+* Official-grade
+* Calm, precise, and intelligent
+
+---
+
+## PRIMARY DESIGN PHILOSOPHY
+
+Do NOT design for “coolness”.
+
+Design for:
+
+* Trust
+* Clarity
+* Evidence
+* Psychological safety
+
+Every UI element must answer:
+“Why should the user trust this result?”
+
+---
+
+## UI/UX REQUIREMENTS (CRITICAL)
+
+VISUAL STYLE:
+
+* Inspired by fintech + cybersecurity dashboards
+* Minimal, structured, no visual noise
+* Dark mode default (light mode optional)
+
+COLOR SYSTEM:
+
+* Background: Deep dark (#0B0F1A)
+* Cards: Slightly lighter (#121826)
+* Accent:
+
+  * Blue (interaction)
+  * Yellow (warning)
+  * Red (high risk)
+  * Green (safe)
+* Avoid bright/neon gradients
+
+TYPOGRAPHY:
+
+* Clean sans-serif (Inter or similar)
+* Clear hierarchy:
+
+  * Large bold for risk score
+  * Medium for explanations
+  * Small for metadata
+
+---
+
+## FIRST SCREEN EXPERIENCE
+
+Above-the-fold must include:
+
+* Headline:
+  “Check Before You Trust Any Payment or Message”
+
+* Single powerful input box:
+
+  * Accept:
+
+    * Phone number
+    * UPI ID
+    * Message text
+
+* Placeholder examples:
+
+  * “Enter phone number…”
+  * “Paste suspicious message…”
+
+* NO login required before first use
+
+* Subtle trust indicators:
+
+  * “Verified reports only affect results”
+  * “AI + human moderation”
+
+---
+
+## RESULT PAGE (MOST IMPORTANT)
+
+Design this as the core trust interface.
+
+SECTION 1: RISK SUMMARY
+
+* Large numeric score (0–100)
+* Label: LOW / MEDIUM / HIGH RISK
+* Color-coded but controlled (not aggressive)
+
+SECTION 2: WHY THIS RESULT
+
+* Clear explanation in human language:
+
+  * Example:
+    “This number matches 14 verified scam reports”
+    “Message contains urgency-based scam patterns”
+
+SECTION 3: EVIDENCE PANEL
+
+* Number of reports
+* Last reported time
+* Geographic distribution
+* Scam category (e.g., UPI fraud, job scam)
+
+SECTION 4: PATTERN DETECTION
+
+* Highlight suspicious phrases in message
+* Explain pattern type:
+
+  * Urgency
+  * Authority impersonation
+  * Payment trap
+
+SECTION 5: CONFIDENCE LEVEL
+
+* Show percentage confidence (e.g., 78%)
+* Never show false certainty
+
+SECTION 6: SUGGESTED ACTION
+
+* Clear steps:
+
+  * Do not send money
+  * Block contact
+  * Report to authorities
+
+---
+
+## MICRO-INTERACTIONS
+
+* Input focus glow (subtle blue)
+* Loading state:
+
+  * Text: “Analyzing patterns across multiple data sources…”
+  * No generic spinner
+* Result reveal:
+
+  * Smooth fade + slight upward motion
+* Hover states:
+
+  * Soft transitions (no sharp jumps)
+
+---
+
+## SOUND DESIGN
+
+* Notification sound must be:
+
+  * Soft
+  * Short
+  * Professional (like payment/security apps)
+* No loud alerts or gaming tones
+
+---
+
+## CORE FEATURES
+
+1. SCAM CHECK ENGINE
+
+* Input:
+
+  * Phone number
+  * UPI ID
+  * Message text
+* Output:
+
+  * Risk score
+  * Explanation
+  * Evidence
+  * Suggested actions
+
+2. MESSAGE ANALYZER
+
+* Detect:
+
+  * Urgency phrases
+  * Fake authority
+  * Payment manipulation
+* Highlight suspicious parts visually
+
+3. REPORT SYSTEM
+
+* Users submit:
+
+  * Number / UPI / message
+  * Optional screenshot
+  * Description
+
+4. VERIFICATION PIPELINE (CRITICAL)
+
+* Reports do NOT directly affect results
+* Multi-layer validation:
+
+  * Duplicate detection
+  * Pattern clustering
+  * User trust score
+  * Admin moderation
+
+5. REAL-TIME ALERTS
+
+* Notify users:
+
+  * New scam trends
+  * High-risk spikes
+
+6. USER DASHBOARD
+
+* Search history
+* Saved alerts
+* Report tracking (Under Review / Verified / Rejected)
+
+---
+
+## TRUST & SAFETY SYSTEM
+
+* Only VERIFIED reports influence risk score
+* Show:
+
+  * “Verified reports: X”
+  * “Pending reports: Y”
+* Prevent misuse:
+
+  * Rate limiting
+  * Spam detection
+  * Fake report filtering
+
+---
+
+## ADMIN PANEL
+
+* Review incoming reports
+* Approve / reject with reason
+* Edit risk scores
+* Monitor scam trends
+* Ban malicious users
+
+---
+
+## TECH STACK
+
+Frontend:
+
+* Next.js (latest)
+* Tailwind CSS
+* Framer Motion
+
+Backend:
+
+* Node.js (NestJS preferred)
+
+Database:
+
+* PostgreSQL
+* Redis (cache + rate limiting)
+
+Authentication:
+
+* Firebase Auth or Auth0
+
+Notifications:
+
+* Firebase Cloud Messaging
+
+---
+
+## PERFORMANCE REQUIREMENTS
+
+* Page load < 2 seconds
+* API response < 300ms
+* Optimized queries
+* CDN usage
+
+---
+
+## SECURITY
+
+* Input sanitization
+* Data encryption
+* No exposure of personal data
+* Abuse prevention systems
+
+---
+
+## IMPORTANT PRODUCT RULES
+
+* Do NOT show unverified accusations as facts
+* Always provide reasoning with results
+* Avoid fear-based UI
+* Maintain calm, professional tone
+* Prioritize accuracy over speed
+
+---
+
+## FINAL EXPECTATION
+
+The final product must feel like:
+
+* A tool people trust before sending money
+* A system that explains decisions clearly
+* A platform that reduces real-world scams
+
+This is not a project.
+
+This is a **trust infrastructure product**.
+
+Every decision must reinforce:
+ACCURACY → TRANSPARENCY → TRUST
