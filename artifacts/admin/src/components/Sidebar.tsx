@@ -26,19 +26,24 @@ export default function Sidebar({ onLogout }: { onLogout: () => void }) {
 
       <nav className="flex-1 px-3 py-4 space-y-1">
         {NAV.map((item) => {
-          const isActive = item.path === "/" ? location === "/" : location.startsWith(item.path);
+          const isActive =
+            item.path === "/" ? location === "/" : location.startsWith(item.path);
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-primary/15 text-primary font-medium border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
+              asChild
             >
-              <span className="text-base w-4 text-center">{item.icon}</span>
-              {item.label}
+              <a
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                  isActive
+                    ? "bg-primary/15 text-primary font-medium border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
+                <span className="text-base w-4 text-center">{item.icon}</span>
+                {item.label}
+              </a>
             </Link>
           );
         })}

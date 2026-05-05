@@ -63,6 +63,7 @@ export default function CheckScreen() {
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
+    if (Platform.OS === "web") return;
     isOnboardingComplete().then((done) => {
       if (!done) router.replace("/onboarding");
     });

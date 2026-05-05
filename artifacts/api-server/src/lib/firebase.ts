@@ -8,7 +8,7 @@ export function getFirebaseDb(): admin.database.Database | null {
   initialized = true;
 
   const serviceAccountJson = process.env["FIREBASE_SERVICE_ACCOUNT"];
-  const databaseUrl = process.env["FIREBASE_DATABASE_URL"] ?? "https://scam-radar-india-default-rtdb.firebaseio.com";
+  const databaseUrl = process.env["FIREBASE_DATABASE_URL"] ?? "https://scam-radar-india-default-rtdb.asia-southeast1.firebasedatabase.app";
 
   if (!serviceAccountJson) {
     console.warn("[firebase] FIREBASE_SERVICE_ACCOUNT not set — user count from Firebase unavailable");
@@ -40,10 +40,15 @@ export async function registerUserInFirebase(uid: string, deviceInfo: {
   const database = getFirebaseDb();
   if (!database) return;
   try {
-    await database.ref(`users/${uid}`).set({
-      ...deviceInfo,
+    const payload: Record<string, string | number> = {
+      platform: deviceInfo.platform,
+      registeredAt: deviceInfo.registeredAt,
       lastSeen: Date.now(),
-    });
+    };
+    if (deviceInfo.appVersion) {
+      payload["appVersion"] = deviceInfo.appVersion;
+    }
+    await database.ref(`users/${uid}`).set(payload);
   } catch (err) {
     console.error("[firebase] Failed to register user:", err);
   }

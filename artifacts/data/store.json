@@ -1,7 +1,8 @@
 {
   "reports": [],
   "pushTokens": [
-    "ExponentPushToken[test123]"
+    "ExponentPushToken[test123]",
+    "ExponentPushToken[test456]"
   ],
   "alerts": [
     {
