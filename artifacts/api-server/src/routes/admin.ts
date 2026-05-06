@@ -3,17 +3,48 @@ import { adminAuth } from "../middlewares/adminAuth.js";
 import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
 import { getFirebaseUserCount, cleanupGhostDevices } from "../lib/firebase.js";
+import { signAdminToken } from "../lib/jwt.js";
+import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
+import crypto from "crypto";
 
 const router = Router();
 
+function timingSafeEqual(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a, "utf8");
+    const bufB = Buffer.from(b, "utf8");
+    if (bufA.length !== bufB.length) {
+      crypto.timingSafeEqual(bufA, Buffer.alloc(bufA.length));
+      return false;
+    }
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
+
 router.post("/admin/login", (req, res) => {
   const { password } = req.body as { password?: string };
+
+  if (!password || typeof password !== "string") {
+    res.status(400).json({ error: "Password is required" });
+    return;
+  }
+
+  if (password.length > 256) {
+    res.status(400).json({ error: "Invalid password" });
+    return;
+  }
+
   const adminPassword = process.env["ADMIN_PASSWORD"] ?? "scamradar-admin-2024";
-  if (!password || password !== adminPassword) {
+
+  if (!timingSafeEqual(password, adminPassword)) {
     res.status(401).json({ error: "Invalid password" });
     return;
   }
-  res.json({ token: adminPassword });
+
+  const token = signAdminToken();
+  res.json({ token });
 });
 
 router.post("/admin/notify", adminAuth, async (req, res) => {
@@ -23,12 +54,15 @@ router.post("/admin/notify", adminAuth, async (req, res) => {
     data?: Record<string, unknown>;
   };
 
-  if (!title || !body) {
+  const cleanTitle = sanitizeShort(title);
+  const cleanBody = sanitizeMedium(body);
+
+  if (!cleanTitle || !cleanBody) {
     res.status(400).json({ error: "title and body are required" });
     return;
   }
 
-  const result = await broadcastPush(title, body, data ?? { type: "admin_broadcast" });
+  const result = await broadcastPush(cleanTitle, cleanBody, data ?? { type: "admin_broadcast" });
   req.log.info({ ...result }, "Broadcast notification sent");
   res.json({ ok: true, ...result });
 });

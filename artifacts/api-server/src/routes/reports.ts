@@ -2,8 +2,11 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { store, type Report } from "../lib/store.js";
 import { broadcastPush } from "../lib/push.js";
+import { sanitizeShort, sanitizeMedium, sanitizeLong } from "../lib/sanitize.js";
 
 const router = Router();
+
+const ALLOWED_TYPES = ["phone", "upi", "message"] as const;
 
 router.post("/reports", (req, res) => {
   const { type, value, category, description } = req.body as {
@@ -13,22 +16,32 @@ router.post("/reports", (req, res) => {
     description?: string;
   };
 
-  if (!type || !value) {
+  const cleanType = sanitizeShort(type);
+  const cleanValue = sanitizeMedium(value);
+  const cleanCategory = sanitizeShort(category);
+  const cleanDescription = sanitizeLong(description);
+
+  if (!cleanType || !cleanValue) {
     res.status(400).json({ error: "type and value are required" });
     return;
   }
 
-  if (!["phone", "upi", "message"].includes(type)) {
+  if (!(ALLOWED_TYPES as readonly string[]).includes(cleanType)) {
     res.status(400).json({ error: "type must be phone, upi, or message" });
+    return;
+  }
+
+  if (cleanValue.length < 3) {
+    res.status(400).json({ error: "value is too short" });
     return;
   }
 
   const report: Report = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    type: type as Report["type"],
-    value: String(value).trim(),
-    category: String(category ?? "Other").trim(),
-    description: String(description ?? "").trim(),
+    type: cleanType as Report["type"],
+    value: cleanValue,
+    category: cleanCategory || "Other",
+    description: cleanDescription,
     status: "pending",
     submittedAt: Date.now(),
   };
@@ -44,10 +57,23 @@ router.get("/reports", adminAuth, (_req, res) => {
 
 router.put("/reports/:id/verify", adminAuth, async (req, res) => {
   const { scamInfo } = req.body as { scamInfo?: Report["scamInfo"] };
+
+  let cleanScamInfo: Report["scamInfo"] | undefined;
+  if (scamInfo && typeof scamInfo === "object") {
+    cleanScamInfo = {
+      title: sanitizeShort(scamInfo.title),
+      description: sanitizeMedium(scamInfo.description),
+      modus: sanitizeMedium(scamInfo.modus),
+      severity: ["CRITICAL", "HIGH", "MEDIUM", "LOW"].includes(scamInfo.severity)
+        ? scamInfo.severity
+        : "HIGH",
+    };
+  }
+
   const updated = store.updateReport(req.params["id"]!, {
     status: "verified",
     verifiedAt: Date.now(),
-    scamInfo,
+    scamInfo: cleanScamInfo,
   });
 
   if (!updated) {
@@ -57,8 +83,8 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
 
   const pushTitle = "Verified Scam Alert";
   const scamValue = updated.value.length > 30 ? updated.value.slice(0, 30) + "…" : updated.value;
-  const pushBody = scamInfo?.title
-    ? `${scamInfo.title}: ${scamValue}`
+  const pushBody = cleanScamInfo?.title
+    ? `${cleanScamInfo.title}: ${scamValue}`
     : `A new ${updated.type} scam has been verified: ${scamValue}`;
 
   await broadcastPush(pushTitle, pushBody, {
@@ -66,7 +92,7 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
     reportId: updated.id,
     scamType: updated.type,
     scamValue: updated.value,
-    scamInfo,
+    scamInfo: cleanScamInfo,
   });
 
   req.log.info({ reportId: updated.id }, "Report verified and push sent");
