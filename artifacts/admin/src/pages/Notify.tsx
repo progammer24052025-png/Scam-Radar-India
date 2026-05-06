@@ -116,10 +116,23 @@ export default function Notify({ token }: { token: string }) {
               />
             </div>
 
+            <button
+              type="button"
+              onClick={() => {
+                setTitle("🔔 Test Notification");
+                setBody("Firebase FCM is working correctly on your device.");
+                setResult(null);
+                setError(null);
+              }}
+              className="w-full py-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition"
+            >
+              Fill with test message
+            </button>
+
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground flex items-start gap-2">
                 <span className="shrink-0">ℹ</span>
-                This will send to all devices that have registered for notifications. Devices using Expo Go will receive the notification. Devices that uninstalled the app will be automatically removed from the list.
+                Sends via Firebase Cloud Messaging (FCM) directly to all registered devices — works even when the app is closed. Requires <code className="bg-muted px-1 rounded">FIREBASE_SERVICE_ACCOUNT</code> secret to be set.
               </p>
             </div>
 
