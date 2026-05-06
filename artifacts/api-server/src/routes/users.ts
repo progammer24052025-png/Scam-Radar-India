@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { store } from "../lib/store.js";
-import { registerUserInFirebase } from "../lib/firebase.js";
+import {
+  registerUserInFirebase,
+  savePushTokenToFirebase,
+} from "../lib/firebase.js";
 import crypto from "crypto";
 
 const router = Router();
@@ -14,15 +17,19 @@ router.post("/users/register", async (req, res) => {
   };
 
   const deviceUid = uid ?? crypto.randomUUID();
+  const devicePlatform = platform ?? "unknown";
 
   await registerUserInFirebase(deviceUid, {
-    platform: platform ?? "unknown",
+    platform: devicePlatform,
     appVersion,
     registeredAt: Date.now(),
   });
 
-  if (pushToken && typeof pushToken === "string") {
-    store.addPushToken(pushToken.trim());
+  if (pushToken && typeof pushToken === "string" && pushToken.trim()) {
+    const token = pushToken.trim();
+    store.addPushToken(token);
+    await savePushTokenToFirebase(token, devicePlatform);
+    req.log.info({ platform: devicePlatform }, "Push token registered");
   }
 
   res.json({ ok: true, uid: deviceUid });

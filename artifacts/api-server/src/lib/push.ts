@@ -1,5 +1,9 @@
 import { logger } from "./logger.js";
 import { store } from "./store.js";
+import {
+  getAllPushTokensFromFirebase,
+  removePushTokenFromFirebase,
+} from "./firebase.js";
 
 interface ExpoPushMessage {
   to: string;
@@ -9,6 +13,7 @@ interface ExpoPushMessage {
   sound?: "default" | null;
   badge?: number;
   priority?: "default" | "normal" | "high";
+  channelId?: string;
 }
 
 interface ExpoPushTicket {
@@ -24,17 +29,15 @@ export async function sendPushNotification(
   body: string,
   data?: Record<string, unknown>
 ): Promise<{ sent: number; errors: number }> {
-  if (tokens.length === 0) {
-    return { sent: 0, errors: 0 };
-  }
-
   const validTokens = tokens.filter(
-    (t) => t.startsWith("ExponentPushToken[") || t.startsWith("ExpoPushToken[")
+    (t) =>
+      typeof t === "string" &&
+      (t.startsWith("ExponentPushToken[") || t.startsWith("ExpoPushToken["))
   );
 
   if (validTokens.length === 0) {
-    logger.warn("No valid Expo push tokens to send to");
-    return { sent: 0, errors: tokens.length };
+    logger.warn({ total: tokens.length }, "No valid Expo push tokens to send to");
+    return { sent: 0, errors: 0 };
   }
 
   const messages: ExpoPushMessage[] = validTokens.map((token) => ({
@@ -44,6 +47,7 @@ export async function sendPushNotification(
     data: data ?? {},
     sound: "default",
     priority: "high",
+    channelId: "default",
   }));
 
   try {
@@ -58,28 +62,34 @@ export async function sendPushNotification(
     });
 
     if (!response.ok) {
-      logger.error({ status: response.status }, "Expo push API error");
+      const text = await response.text();
+      logger.error({ status: response.status, body: text }, "Expo push API error");
       return { sent: 0, errors: validTokens.length };
     }
 
     const result = (await response.json()) as { data: ExpoPushTicket[] };
+    const tickets = Array.isArray(result.data) ? result.data : [result.data];
     let sent = 0;
     let errors = 0;
 
-    for (const ticket of result.data) {
-      if (ticket.status === "ok") {
+    for (let i = 0; i < tickets.length; i++) {
+      const ticket = tickets[i];
+      if (ticket?.status === "ok") {
         sent++;
       } else {
         errors++;
-        if (ticket.details?.error === "DeviceNotRegistered") {
-          const token = validTokens[result.data.indexOf(ticket)];
-          if (token) store.removePushToken(token);
+        if (ticket?.details?.error === "DeviceNotRegistered") {
+          const token = validTokens[i];
+          if (token) {
+            store.removePushToken(token);
+            await removePushTokenFromFirebase(token);
+          }
         }
         logger.warn({ ticket }, "Push ticket error");
       }
     }
 
-    logger.info({ sent, errors }, "Push notifications sent");
+    logger.info({ sent, errors, total: validTokens.length }, "Push notifications sent");
     return { sent, errors };
   } catch (err) {
     logger.error({ err }, "Failed to send push notifications");
@@ -92,6 +102,17 @@ export async function broadcastPush(
   body: string,
   data?: Record<string, unknown>
 ): Promise<{ sent: number; errors: number }> {
-  const tokens = store.getPushTokens();
-  return sendPushNotification(tokens, title, body, data);
+  // Get tokens from Firebase first (persists across restarts), fall back to local store
+  const firebaseTokens = await getAllPushTokensFromFirebase();
+  const localTokens = store.getPushTokens();
+
+  // Merge and deduplicate
+  const allTokens = [...new Set([...firebaseTokens, ...localTokens])];
+
+  logger.info(
+    { firebaseCount: firebaseTokens.length, localCount: localTokens.length, total: allTokens.length },
+    "Broadcasting push notification"
+  );
+
+  return sendPushNotification(allTokens, title, body, data);
 }

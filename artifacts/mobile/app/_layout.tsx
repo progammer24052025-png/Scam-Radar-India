@@ -5,13 +5,6 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import {
-  Entypo,
-  Feather,
-  FontAwesome,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
@@ -45,24 +38,51 @@ async function registerDevice() {
   try {
     const uid = await getOrCreateDeviceUid();
     const platform = Platform.OS;
+    console.log("[ScamRadar] registerDevice start, platform:", platform, "uid:", uid);
 
     let pushToken: string | undefined;
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
 
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    // Push tokens only work on native (not web)
+    if (platform !== "web") {
+      const { status: existing } = await Notifications.getPermissionsAsync();
+      console.log("[ScamRadar] notification permission status:", existing);
+      const finalStatus =
+        existing === "granted"
+          ? existing
+          : (await Notifications.requestPermissionsAsync()).status;
+
+      console.log("[ScamRadar] final permission status:", finalStatus);
+
+      if (finalStatus === "granted") {
+        // Android needs a notification channel
+        if (platform === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "Scam Radar Alerts",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#3B82F6",
+            lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+            showBadge: true,
+          });
+        }
+
+        try {
+          console.log("[ScamRadar] requesting push token...");
+          const tokenData = await Notifications.getExpoPushTokenAsync();
+          pushToken = tokenData.data;
+          console.log("[ScamRadar] push token obtained:", pushToken ? pushToken.slice(0, 30) + "..." : "null");
+        } catch (tokenErr) {
+          console.warn("[ScamRadar] push token error:", tokenErr);
+        }
+      } else {
+        console.warn("[ScamRadar] notification permission denied");
+      }
     }
 
-    if (finalStatus === "granted") {
-      const tokenData = await Notifications.getExpoPushTokenAsync();
-      pushToken = tokenData.data;
-    }
-
-    await api.registerUser(uid, platform, pushToken);
-  } catch {
-    // silent — registration is best-effort
+    const result = await api.registerUser(uid, platform, pushToken);
+    console.log("[ScamRadar] registerUser result:", JSON.stringify(result));
+  } catch (err) {
+    console.error("[ScamRadar] registerDevice failed:", err);
   }
 }
 
@@ -98,11 +118,6 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
-    ...Feather.font,
-    ...Ionicons.font,
-    ...MaterialIcons.font,
-    ...FontAwesome.font,
-    ...Entypo.font,
   });
 
   useEffect(() => {

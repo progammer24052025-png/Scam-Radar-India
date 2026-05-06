@@ -1,9 +1,23 @@
 {
-  "reports": [],
-  "pushTokens": [
-    "ExponentPushToken[test123]",
-    "ExponentPushToken[test456]"
+  "reports": [
+    {
+      "id": "mosthsuzpc8pcw",
+      "type": "phone",
+      "value": "1234567890",
+      "category": "Other",
+      "description": "Test",
+      "status": "verified",
+      "submittedAt": 1777996978523,
+      "verifiedAt": 1777997056521,
+      "scamInfo": {
+        "title": "test",
+        "description": "no scam just testing",
+        "modus": "",
+        "severity": "CRITICAL"
+      }
+    }
   ],
+  "pushTokens": [],
   "alerts": [
     {
       "id": "1",

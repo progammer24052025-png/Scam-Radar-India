@@ -2,7 +2,7 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
-import { getFirebaseUserCount } from "../lib/firebase.js";
+import { getFirebaseUserCount, cleanupGhostDevices } from "../lib/firebase.js";
 
 const router = Router();
 
@@ -49,6 +49,12 @@ router.get("/admin/stats", adminAuth, async (_req, res) => {
     totalAlerts: alerts.length,
     registeredDevices,
   });
+});
+
+router.post("/admin/cleanup", adminAuth, async (req, res) => {
+  const removed = await cleanupGhostDevices();
+  req.log.info({ removed }, "Ghost devices cleaned up");
+  res.json({ ok: true, removed });
 });
 
 export default router;

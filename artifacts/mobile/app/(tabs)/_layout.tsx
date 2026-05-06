@@ -1,43 +1,26 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { SymbolView } from "expo-symbols";
 
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "shield", selected: "shield.fill" }} />
-        <Label>Check</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="dashboard">
-        <Icon sf={{ default: "clock", selected: "clock.fill" }} />
-        <Label>History</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="alerts">
-        <Icon sf={{ default: "bell", selected: "bell.fill" }} />
-        <Label>Alerts</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="report">
-        <Icon sf={{ default: "flag", selected: "flag.fill" }} />
-        <Label>Report</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
+const isIOS = Platform.OS === "ios";
+const isWeb = Platform.OS === "web";
 
-function ClassicTabLayout() {
+const TAB_SCREENS = [
+  { name: "index", title: "Check", feather: "shield" as const, sf: "shield", sfFill: "shield.fill" },
+  { name: "dashboard", title: "History", feather: "clock" as const, sf: "clock", sfFill: "clock.fill" },
+  { name: "alerts", title: "Alerts", feather: "bell" as const, sf: "bell", sfFill: "bell.fill" },
+  { name: "report", title: "Report", feather: "flag" as const, sf: "flag", sfFill: "flag.fill" },
+];
+
+export default function TabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
@@ -70,61 +53,21 @@ function ClassicTabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Check",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="shield" tintColor={color} size={22} />
-            ) : (
-              <Feather name="shield" size={21} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: "History",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="clock" tintColor={color} size={22} />
-            ) : (
-              <Feather name="clock" size={21} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="alerts"
-        options={{
-          title: "Alerts",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bell" tintColor={color} size={22} />
-            ) : (
-              <Feather name="bell" size={21} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="report"
-        options={{
-          title: "Report",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="flag" tintColor={color} size={22} />
-            ) : (
-              <Feather name="flag" size={21} color={color} />
-            ),
-        }}
-      />
+      {TAB_SCREENS.map((screen) => (
+        <Tabs.Screen
+          key={screen.name}
+          name={screen.name}
+          options={{
+            title: screen.title,
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name={screen.sf} tintColor={color} size={22} />
+              ) : (
+                <Feather name={screen.feather} size={22} color={color} />
+              ),
+          }}
+        />
+      ))}
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }
