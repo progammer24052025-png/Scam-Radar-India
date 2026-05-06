@@ -80,15 +80,9 @@ export const api = {
 
   getAlerts: () => request<ApiAlert[]>("/alerts"),
 
-  registerPushToken: (token: string) =>
-    request<{ ok: boolean }>("/push-tokens", {
-      method: "POST",
-      body: JSON.stringify({ token }),
-    }),
-
-  registerUser: (uid: string, platform: string, pushToken?: string, fcmToken?: string) =>
+  registerUser: (uid: string, platform: string) =>
     request<{ ok: boolean; uid: string }>("/users/register", {
       method: "POST",
-      body: JSON.stringify({ uid, platform, pushToken, fcmToken }),
+      body: JSON.stringify({ uid, platform }),
     }),
 };

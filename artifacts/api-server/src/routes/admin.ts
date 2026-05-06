@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
-import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
 import { getFirebaseUserCount, cleanupGhostDevices } from "../lib/firebase.js";
 import { signAdminToken } from "../lib/jwt.js";
-import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
 import crypto from "crypto";
 
 const router = Router();
@@ -47,33 +45,12 @@ router.post("/admin/login", (req, res) => {
   res.json({ token });
 });
 
-router.post("/admin/notify", adminAuth, async (req, res) => {
-  const { title, body, data } = req.body as {
-    title?: string;
-    body?: string;
-    data?: Record<string, unknown>;
-  };
-
-  const cleanTitle = sanitizeShort(title);
-  const cleanBody = sanitizeMedium(body);
-
-  if (!cleanTitle || !cleanBody) {
-    res.status(400).json({ error: "title and body are required" });
-    return;
-  }
-
-  const result = await broadcastPush(cleanTitle, cleanBody, data ?? { type: "admin_broadcast" });
-  req.log.info({ ...result }, "Broadcast notification sent");
-  res.json({ ok: true, ...result });
-});
-
 router.get("/admin/stats", adminAuth, async (_req, res) => {
   const reports = store.getReports();
-  const tokens = store.getPushTokens();
   const alerts = store.getAlerts();
 
   const firebaseCount = await getFirebaseUserCount();
-  const registeredDevices = firebaseCount !== null ? firebaseCount : tokens.length;
+  const registeredDevices = firebaseCount ?? 0;
 
   res.json({
     totalReports: reports.length,

@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { store, type Alert } from "../lib/store.js";
-import { broadcastPush } from "../lib/push.js";
 import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
 
 const router = Router();
@@ -11,7 +10,7 @@ router.get("/alerts", (_req, res) => {
 });
 
 router.post("/alerts", adminAuth, async (req, res) => {
-  const body = req.body as Partial<Alert> & { notify?: boolean };
+  const body = req.body as Partial<Alert>;
 
   const cleanTitle = sanitizeShort(body.title);
   const cleanDescription = sanitizeMedium(body.description);
@@ -62,15 +61,6 @@ router.post("/alerts", adminAuth, async (req, res) => {
   };
 
   store.addAlert(alert);
-
-  if (body.notify) {
-    const emoji = alert.severity === "CRITICAL" ? "🚨" : alert.severity === "HIGH" ? "⚠️" : "ℹ️";
-    await broadcastPush(
-      `${emoji} ${alert.severity} Alert: ${alert.title}`,
-      alert.description.slice(0, 150),
-      { type: "new_alert", alertId: alert.id }
-    );
-  }
 
   req.log.info({ alertId: alert.id }, "Alert created");
   res.status(201).json(alert);
