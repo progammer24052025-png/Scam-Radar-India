@@ -8,6 +8,9 @@ import { logger } from "./lib/logger.js";
 
 const app: Express = express();
 
+// Trust the Replit reverse proxy so rate limiting and IP headers work correctly
+app.set("trust proxy", 1);
+
 // ─── Security headers ─────────────────────────────────────────────────────────
 app.use(
   helmet({
