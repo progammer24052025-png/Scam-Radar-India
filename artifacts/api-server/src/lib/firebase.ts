@@ -118,6 +118,23 @@ export async function getAllFcmTokensFromFirebase(): Promise<string[]> {
   }
 }
 
+export async function getFcmTokenCount(): Promise<number> {
+  const database = getFirebaseDb();
+  if (!database) return 0;
+  try {
+    const snapshot = await database.ref("fcmTokens").once("value");
+    if (!snapshot.exists()) return 0;
+    return Object.keys(snapshot.val() as object).length;
+  } catch {
+    return 0;
+  }
+}
+
+export function isFirebaseConnected(): boolean {
+  init();
+  return db !== null;
+}
+
 // ─── FCM Send via Firebase Admin Messaging ────────────────────────────────────
 
 export async function sendFcmNotifications(

@@ -64,6 +64,8 @@ export interface Stats {
   rejectedReports: number;
   totalAlerts: number;
   registeredDevices: number;
+  fcmTokens: number;
+  firebaseConnected: boolean;
 }
 
 export const adminApi = {

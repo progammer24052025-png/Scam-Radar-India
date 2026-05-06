@@ -2,7 +2,7 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
-import { getFirebaseUserCount, cleanupGhostDevices } from "../lib/firebase.js";
+import { getFirebaseUserCount, getFcmTokenCount, isFirebaseConnected, cleanupGhostDevices } from "../lib/firebase.js";
 import { signAdminToken } from "../lib/jwt.js";
 import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
 import crypto from "crypto";
@@ -71,8 +71,11 @@ router.get("/admin/stats", adminAuth, async (_req, res) => {
   const reports = store.getReports();
   const alerts = store.getAlerts();
 
-  const firebaseCount = await getFirebaseUserCount();
-  const registeredDevices = firebaseCount ?? 0;
+  const firebaseConnected = isFirebaseConnected();
+  const [firebaseCount, fcmTokenCount] = await Promise.all([
+    getFirebaseUserCount(),
+    getFcmTokenCount(),
+  ]);
 
   res.json({
     totalReports: reports.length,
@@ -80,7 +83,9 @@ router.get("/admin/stats", adminAuth, async (_req, res) => {
     verifiedReports: reports.filter((r) => r.status === "verified").length,
     rejectedReports: reports.filter((r) => r.status === "rejected").length,
     totalAlerts: alerts.length,
-    registeredDevices,
+    registeredDevices: firebaseCount ?? 0,
+    fcmTokens: fcmTokenCount,
+    firebaseConnected,
   });
 });
 
