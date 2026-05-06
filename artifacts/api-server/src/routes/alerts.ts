@@ -2,6 +2,7 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { store, type Alert } from "../lib/store.js";
 import { broadcastPush } from "../lib/push.js";
+import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
 
 const router = Router();
 
@@ -12,22 +13,50 @@ router.get("/alerts", (_req, res) => {
 router.post("/alerts", adminAuth, async (req, res) => {
   const body = req.body as Partial<Alert> & { notify?: boolean };
 
-  if (!body.title || !body.description || !body.severity) {
+  const cleanTitle = sanitizeShort(body.title);
+  const cleanDescription = sanitizeMedium(body.description);
+  const cleanCategory = sanitizeShort(body.category);
+  const cleanLocation = sanitizeShort(body.location);
+
+  if (!cleanTitle || !cleanDescription || !body.severity) {
     res.status(400).json({ error: "title, description, and severity are required" });
     return;
   }
 
+  const allowedSeverity = ["CRITICAL", "HIGH", "MEDIUM"] as const;
+  if (!(allowedSeverity as readonly string[]).includes(body.severity)) {
+    res.status(400).json({ error: "severity must be CRITICAL, HIGH, or MEDIUM" });
+    return;
+  }
+
+  const allowedTrend = ["rising", "stable", "declining"] as const;
+  const trend = (allowedTrend as readonly string[]).includes(body.trend ?? "")
+    ? (body.trend as typeof allowedTrend[number])
+    : "rising";
+
+  const rawIndicators = Array.isArray(body.indicators) ? body.indicators : [];
+  const cleanIndicators = rawIndicators
+    .filter((i): i is string => typeof i === "string")
+    .map((i) => sanitizeShort(i))
+    .filter(Boolean)
+    .slice(0, 20);
+
+  const reportCount =
+    typeof body.reportCount === "number" && body.reportCount >= 0
+      ? Math.floor(body.reportCount)
+      : 0;
+
   const alert: Alert = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    title: body.title,
-    description: body.description,
-    category: body.category ?? "Other",
+    title: cleanTitle,
+    description: cleanDescription,
+    category: cleanCategory || "Other",
     severity: body.severity,
-    reportCount: body.reportCount ?? 0,
-    location: body.location ?? "India",
+    reportCount,
+    location: cleanLocation || "India",
     timeAgo: "just now",
-    trend: body.trend ?? "rising",
-    indicators: body.indicators ?? [],
+    trend,
+    indicators: cleanIndicators,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -48,7 +77,42 @@ router.post("/alerts", adminAuth, async (req, res) => {
 });
 
 router.put("/alerts/:id", adminAuth, (req, res) => {
-  const updated = store.updateAlert(req.params["id"]!, req.body as Partial<Alert>);
+  const body = req.body as Partial<Alert>;
+
+  const updates: Partial<Alert> = {};
+
+  if (body.title !== undefined) updates.title = sanitizeShort(body.title);
+  if (body.description !== undefined) updates.description = sanitizeMedium(body.description);
+  if (body.category !== undefined) updates.category = sanitizeShort(body.category);
+  if (body.location !== undefined) updates.location = sanitizeShort(body.location);
+
+  if (body.severity !== undefined) {
+    const allowed = ["CRITICAL", "HIGH", "MEDIUM"] as const;
+    if ((allowed as readonly string[]).includes(body.severity)) {
+      updates.severity = body.severity;
+    }
+  }
+
+  if (body.trend !== undefined) {
+    const allowed = ["rising", "stable", "declining"] as const;
+    if ((allowed as readonly string[]).includes(body.trend)) {
+      updates.trend = body.trend;
+    }
+  }
+
+  if (typeof body.reportCount === "number" && body.reportCount >= 0) {
+    updates.reportCount = Math.floor(body.reportCount);
+  }
+
+  if (Array.isArray(body.indicators)) {
+    updates.indicators = body.indicators
+      .filter((i): i is string => typeof i === "string")
+      .map((i) => sanitizeShort(i))
+      .filter(Boolean)
+      .slice(0, 20);
+  }
+
+  const updated = store.updateAlert(req.params["id"]!, updates);
   if (!updated) {
     res.status(404).json({ error: "Alert not found" });
     return;

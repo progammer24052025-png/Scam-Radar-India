@@ -49,6 +49,7 @@ export default function Login({ onLogin }: { onLogin: (token: string) => void })
                 placeholder="Enter password"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
                 autoFocus
+                autoComplete="current-password"
               />
             </div>
 
@@ -70,10 +71,7 @@ export default function Login({ onLogin }: { onLogin: (token: string) => void })
 
           <div className="mt-5 pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
-              Default password: <code className="text-primary">scamradar-admin-2024</code>
-            </p>
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              Set <code className="text-primary">ADMIN_PASSWORD</code> env var to change it.
+              Set <code className="text-primary">ADMIN_PASSWORD</code> env var to change the password.
             </p>
           </div>
         </div>
