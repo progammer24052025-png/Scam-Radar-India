@@ -7,6 +7,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -22,13 +23,63 @@ import { getOrCreateDeviceUid } from "@/utils/storage";
 
 SplashScreen.preventAutoHideAsync();
 
+// Show notifications even when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 const queryClient = new QueryClient();
 
 async function registerDevice() {
   try {
     const uid = await getOrCreateDeviceUid();
     const platform = Platform.OS;
-    await api.registerUser(uid, platform);
+
+    let fcmToken: string | undefined;
+
+    if (platform !== "web") {
+      const { status: existing } = await Notifications.getPermissionsAsync();
+      const finalStatus =
+        existing === "granted"
+          ? existing
+          : (await Notifications.requestPermissionsAsync()).status;
+
+      if (finalStatus === "granted") {
+        if (platform === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "Scam Radar Alerts",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#3B82F6",
+            lockscreenVisibility:
+              Notifications.AndroidNotificationVisibility.PUBLIC,
+            showBadge: true,
+          });
+        }
+
+        // Get raw FCM device token for Firebase Cloud Messaging
+        try {
+          const deviceTokenData = await Notifications.getDevicePushTokenAsync();
+          if (
+            deviceTokenData.data &&
+            typeof deviceTokenData.data === "string" &&
+            deviceTokenData.data.length > 20
+          ) {
+            fcmToken = deviceTokenData.data;
+          }
+        } catch {
+          // Silent — getDevicePushTokenAsync may fail in Expo Go
+        }
+      }
+    }
+
+    await api.registerUser(uid, platform, fcmToken);
   } catch {
     // Registration is best-effort — never crash the app
   }

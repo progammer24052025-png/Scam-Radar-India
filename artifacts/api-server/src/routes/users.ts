@@ -1,15 +1,19 @@
 import { Router } from "express";
-import { registerUserInFirebase } from "../lib/firebase.js";
-import { sanitizeShort } from "../lib/sanitize.js";
+import {
+  registerUserInFirebase,
+  saveFcmTokenToFirebase,
+} from "../lib/firebase.js";
+import { sanitizeShort, sanitizeToken } from "../lib/sanitize.js";
 import crypto from "crypto";
 
 const router = Router();
 
 router.post("/users/register", async (req, res) => {
-  const { uid, platform, appVersion } = req.body as {
+  const { uid, platform, appVersion, fcmToken } = req.body as {
     uid?: string;
     platform?: string;
     appVersion?: string;
+    fcmToken?: string;
   };
 
   const deviceUid = uid
@@ -28,6 +32,15 @@ router.post("/users/register", async (req, res) => {
     appVersion: cleanAppVersion,
     registeredAt: Date.now(),
   });
+
+  // Save raw FCM token for Firebase Cloud Messaging
+  if (fcmToken) {
+    const token = sanitizeToken(fcmToken);
+    if (token && token.length > 20 && /^[A-Za-z0-9_\-:]+$/.test(token)) {
+      await saveFcmTokenToFirebase(deviceUid, token, devicePlatform);
+      req.log.info({ platform: devicePlatform }, "FCM token registered");
+    }
+  }
 
   res.json({ ok: true, uid: deviceUid });
 });

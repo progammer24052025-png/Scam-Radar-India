@@ -80,9 +80,9 @@ export const api = {
 
   getAlerts: () => request<ApiAlert[]>("/alerts"),
 
-  registerUser: (uid: string, platform: string) =>
+  registerUser: (uid: string, platform: string, fcmToken?: string) =>
     request<{ ok: boolean; uid: string }>("/users/register", {
       method: "POST",
-      body: JSON.stringify({ uid, platform }),
+      body: JSON.stringify({ uid, platform, fcmToken }),
     }),
 };

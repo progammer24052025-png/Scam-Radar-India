@@ -37,11 +37,7 @@ export function getFirebaseDb(): admin.database.Database | null {
   return db;
 }
 
-function tokenKey(token: string): string {
-  return token.replace(/[.#$[\]]/g, "_");
-}
-
-// ─── User Registration ───────────────────────────────────────────────────────
+// ─── User Registration ────────────────────────────────────────────────────────
 
 export async function registerUserInFirebase(
   uid: string,
@@ -78,50 +74,7 @@ export async function getFirebaseUserCount(): Promise<number | null> {
   }
 }
 
-// ─── Expo Push Tokens (fallback) ─────────────────────────────────────────────
-
-export async function savePushTokenToFirebase(
-  token: string,
-  platform: string
-): Promise<void> {
-  const database = getFirebaseDb();
-  if (!database) return;
-  try {
-    await database.ref(`pushTokens/${tokenKey(token)}`).set({
-      token,
-      platform,
-      savedAt: Date.now(),
-    });
-  } catch (err) {
-    console.error("[firebase] Failed to save push token:", err);
-  }
-}
-
-export async function removePushTokenFromFirebase(token: string): Promise<void> {
-  const database = getFirebaseDb();
-  if (!database) return;
-  try {
-    await database.ref(`pushTokens/${tokenKey(token)}`).remove();
-  } catch (err) {
-    console.error("[firebase] Failed to remove push token:", err);
-  }
-}
-
-export async function getAllPushTokensFromFirebase(): Promise<string[]> {
-  const database = getFirebaseDb();
-  if (!database) return [];
-  try {
-    const snapshot = await database.ref("pushTokens").once("value");
-    if (!snapshot.exists()) return [];
-    const data = snapshot.val() as Record<string, { token: string }>;
-    return Object.values(data).map((v) => v.token);
-  } catch (err) {
-    console.error("[firebase] Failed to get push tokens:", err);
-    return [];
-  }
-}
-
-// ─── FCM Tokens (primary) ────────────────────────────────────────────────────
+// ─── FCM Tokens ───────────────────────────────────────────────────────────────
 
 export async function saveFcmTokenToFirebase(
   uid: string,
@@ -165,7 +118,7 @@ export async function getAllFcmTokensFromFirebase(): Promise<string[]> {
   }
 }
 
-// ─── FCM Send via Firebase Admin Messaging ───────────────────────────────────
+// ─── FCM Send via Firebase Admin Messaging ────────────────────────────────────
 
 export async function sendFcmNotifications(
   tokens: string[],

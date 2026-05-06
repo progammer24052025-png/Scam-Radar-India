@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { store, type Report } from "../lib/store.js";
+import { broadcastPush } from "../lib/push.js";
 import { sanitizeShort, sanitizeMedium, sanitizeLong } from "../lib/sanitize.js";
 
 const router = Router();
@@ -80,7 +81,21 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
     return;
   }
 
-  req.log.info({ reportId: updated.id }, "Report verified");
+  const pushTitle = "Verified Scam Alert";
+  const scamValue = updated.value.length > 30 ? updated.value.slice(0, 30) + "…" : updated.value;
+  const pushBody = cleanScamInfo?.title
+    ? `${cleanScamInfo.title}: ${scamValue}`
+    : `A new ${updated.type} scam has been verified: ${scamValue}`;
+
+  await broadcastPush(pushTitle, pushBody, {
+    type: "verified_report",
+    reportId: updated.id,
+    scamType: updated.type,
+    scamValue: updated.value,
+    scamInfo: cleanScamInfo,
+  });
+
+  req.log.info({ reportId: updated.id }, "Report verified and FCM push sent");
   res.json(updated);
 });
 
