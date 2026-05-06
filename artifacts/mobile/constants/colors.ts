@@ -27,8 +27,37 @@ const dark = {
   riskLowBg: "#0F1F10",
 };
 
+const light = {
+  text: "#0F172A",
+  tint: "#2563EB",
+  background: "#F8FAFC",
+  foreground: "#0F172A",
+  card: "#FFFFFF",
+  cardForeground: "#0F172A",
+  primary: "#2563EB",
+  primaryForeground: "#FFFFFF",
+  secondary: "#F1F5F9",
+  secondaryForeground: "#475569",
+  muted: "#F1F5F9",
+  mutedForeground: "#64748B",
+  accent: "#EFF6FF",
+  accentForeground: "#1D4ED8",
+  destructive: "#DC2626",
+  destructiveForeground: "#FFFFFF",
+  border: "#E2E8F0",
+  input: "#F1F5F9",
+  warning: "#D97706",
+  success: "#16A34A",
+  riskHigh: "#DC2626",
+  riskMedium: "#D97706",
+  riskLow: "#16A34A",
+  riskHighBg: "#FEF2F2",
+  riskMediumBg: "#FFFBEB",
+  riskLowBg: "#F0FDF4",
+};
+
 const colors = {
-  light: dark,
+  light,
   dark,
   radius: 12,
 };

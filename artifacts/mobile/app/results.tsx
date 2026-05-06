@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
@@ -6,6 +7,7 @@ import {
   Animated,
   Platform,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -73,6 +75,14 @@ export default function ResultsScreen() {
       ? currentInput.slice(0, 60) + "..."
       : currentInput;
 
+  const handleShare = async () => {
+    await Haptics.selectionAsync();
+    const riskEmoji = riskLevel === "HIGH" ? "🔴" : riskLevel === "MEDIUM" ? "🟡" : "🟢";
+    const typeLabel = TYPE_LABELS[inputType] ?? "Unknown";
+    const msg = `${riskEmoji} Scam Radar Analysis Result\n\n${typeLabel}: ${currentInput.slice(0, 80)}\nRisk Score: ${riskScore}/100 (${riskLevel} RISK)\n\n${explanation.slice(0, 200)}\n\nCheck any number or message at Scam Radar India — download the app to stay safe.`;
+    Share.share({ message: msg });
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style="light" />
@@ -82,7 +92,9 @@ export default function ResultsScreen() {
           <Feather name="arrow-left" size={20} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>Analysis Result</Text>
-        <View style={styles.headerRight} />
+        <TouchableOpacity style={styles.backBtn} onPress={handleShare} activeOpacity={0.7}>
+          <Feather name="share-2" size={18} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <Animated.ScrollView

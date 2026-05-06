@@ -81,7 +81,15 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
     return;
   }
 
-  const pushTitle = "Verified Scam Alert";
+  // Award points to the reporter if submitterUid provided
+  const { submitterUid } = req.body as { submitterUid?: string };
+  if (submitterUid && typeof submitterUid === "string") {
+    const { userStore, POINTS } = await import("../lib/userStore.js");
+    userStore.addPoints(submitterUid, POINTS.REPORT_VERIFIED);
+    req.log.info({ submitterUid }, "Awarded verification points");
+  }
+
+  const pushTitle = "✅ Verified Scam Alert";
   const scamValue = updated.value.length > 30 ? updated.value.slice(0, 30) + "…" : updated.value;
   const pushBody = cleanScamInfo?.title
     ? `${cleanScamInfo.title}: ${scamValue}`
@@ -91,8 +99,7 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
     type: "verified_report",
     reportId: updated.id,
     scamType: updated.type,
-    scamValue: updated.value,
-    scamInfo: cleanScamInfo,
+    scamValue: updated.value.slice(0, 100),
   });
 
   req.log.info({ reportId: updated.id }, "Report verified and FCM push sent");

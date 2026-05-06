@@ -1,9 +1,8 @@
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { SymbolView } from "expo-symbols";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -11,16 +10,19 @@ const isIOS = Platform.OS === "ios";
 const isWeb = Platform.OS === "web";
 
 const TAB_SCREENS = [
-  { name: "index", title: "Check", feather: "shield" as const, sf: "shield", sfFill: "shield.fill" },
-  { name: "dashboard", title: "History", feather: "clock" as const, sf: "clock", sfFill: "clock.fill" },
-  { name: "alerts", title: "Alerts", feather: "bell" as const, sf: "bell", sfFill: "bell.fill" },
-  { name: "report", title: "Report", feather: "flag" as const, sf: "flag", sfFill: "flag.fill" },
+  { name: "index", title: "Check", feather: "shield" as const },
+  { name: "alerts", title: "Alerts", feather: "bell" as const },
+  { name: "verified", title: "Verified", feather: "check-circle" as const },
+  { name: "leaderboard", title: "Leaders", feather: "award" as const },
+  { name: "tips", title: "Tips", feather: "book-open" as const },
+  { name: "news", title: "News", feather: "radio" as const },
+  { name: "report", title: "Report", feather: "flag" as const },
+  { name: "dashboard", title: "History", feather: "clock" as const },
+  { name: "profile", title: "Profile", feather: "user" as const },
 ];
 
 export default function TabLayout() {
   const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   return (
     <Tabs
@@ -40,7 +42,7 @@ export default function TabLayout() {
           isIOS ? (
             <BlurView
               intensity={80}
-              tint={isDark ? "dark" : "light"}
+              tint="dark"
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
@@ -59,12 +61,9 @@ export default function TabLayout() {
           name={screen.name}
           options={{
             title: screen.title,
-            tabBarIcon: ({ color }) =>
-              isIOS ? (
-                <SymbolView name={screen.sf} tintColor={color} size={22} />
-              ) : (
-                <Feather name={screen.feather} size={22} color={color} />
-              ),
+            tabBarIcon: ({ color }) => (
+              <Feather name={screen.feather} size={22} color={color} />
+            ),
           }}
         />
       ))}

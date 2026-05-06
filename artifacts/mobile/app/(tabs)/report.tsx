@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/context/AuthContext";
 import { api } from "@/utils/api";
 
 type ScamType = "phone" | "upi" | "message";
@@ -36,6 +37,7 @@ const CATEGORIES: ScamCategory[] = [
 export default function ReportScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [scamType, setScamType] = useState<ScamType>("phone");
   const [input, setInput] = useState("");
@@ -68,6 +70,7 @@ export default function ReportScreen() {
       value: input.trim(),
       category: category ?? "Other",
       description: description.trim(),
+      submitterUid: user?.uid,
     });
 
     if (apiError || !data) {

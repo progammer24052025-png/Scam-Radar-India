@@ -1,7 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   Platform,
   RefreshControl,
@@ -39,6 +40,45 @@ const SEVERITY_FILTERS: { key: SeverityFilter; label: string }[] = [
   { key: "HIGH", label: "High" },
   { key: "MEDIUM", label: "Medium" },
 ];
+
+function PulsingDot({ color }: { color: string }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(scaleAnim, { toValue: 1.6, duration: 800, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 0.2, duration: 800, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scaleAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ]),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+
+  return (
+    <View style={{ width: 10, height: 10, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+          backgroundColor: color,
+          transform: [{ scale: scaleAnim }],
+          opacity: opacityAnim,
+        }}
+      />
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
+    </View>
+  );
+}
 
 export default function AlertsScreen() {
   const colors = useColors();
@@ -105,8 +145,8 @@ export default function AlertsScreen() {
                 <Text style={[styles.title, { color: colors.foreground }]}>Threat Intelligence</Text>
                 <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{updatedText}</Text>
               </View>
-              <View style={[styles.liveDot, { borderColor: colors.riskHigh + "44" }]}>
-                <View style={[styles.liveInner, { backgroundColor: loading ? colors.mutedForeground : colors.riskHigh }]} />
+              <View style={[styles.liveDot, { borderColor: (loading ? colors.mutedForeground : colors.riskHigh) + "44" }]}>
+                <PulsingDot color={loading ? colors.mutedForeground : colors.riskHigh} />
                 <Text style={[styles.liveText, { color: loading ? colors.mutedForeground : colors.riskHigh }]}>
                   {loading ? "..." : "LIVE"}
                 </Text>

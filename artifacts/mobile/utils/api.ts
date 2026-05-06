@@ -43,6 +43,7 @@ export interface ApiReport {
   description: string;
   status: "pending" | "verified" | "rejected";
   submittedAt: number;
+  verifiedAt?: number;
   scamInfo?: {
     title: string;
     description: string;
@@ -66,12 +67,26 @@ export interface ApiAlert {
   updatedAt: number;
 }
 
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoUrl?: string;
+  points: number;
+  reportsSubmitted: number;
+  reportsVerified: number;
+  reportsRejected: number;
+  joinedAt: number;
+  lastActive: number;
+}
+
 export const api = {
   submitReport: (report: {
     type: "phone" | "upi" | "message";
     value: string;
     category: string;
     description: string;
+    submitterUid?: string;
   }) =>
     request<ApiReport>("/reports", {
       method: "POST",
@@ -80,9 +95,30 @@ export const api = {
 
   getAlerts: () => request<ApiAlert[]>("/alerts"),
 
-  registerUser: (uid: string, platform: string, fcmToken?: string) =>
+  getVerifiedReports: () => request<ApiReport[]>("/verified-reports"),
+
+  getLeaderboard: () => request<UserProfile[]>("/leaderboard"),
+
+  getUserProfile: (uid: string) => request<UserProfile>(`/users/${uid}/profile`),
+
+  upsertUserProfile: (data: {
+    uid: string;
+    email?: string;
+    displayName?: string;
+    photoUrl?: string;
+  }) =>
+    request<UserProfile>("/users/profile", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  registerUser: (uid: string, platform: string, fcmToken?: string, googleProfile?: {
+    email?: string;
+    displayName?: string;
+    photoUrl?: string;
+  }) =>
     request<{ ok: boolean; uid: string }>("/users/register", {
       method: "POST",
-      body: JSON.stringify({ uid, platform, fcmToken }),
+      body: JSON.stringify({ uid, platform, fcmToken, ...googleProfile }),
     }),
 };

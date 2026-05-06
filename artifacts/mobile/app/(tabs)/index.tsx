@@ -22,6 +22,7 @@ import { useColors } from "@/hooks/useColors";
 import { detectInputType } from "@/utils/scamAnalyzer";
 import { isOnboardingComplete } from "@/utils/storage";
 import HistoryCard from "@/components/HistoryCard";
+import AnimatedShield from "@/components/AnimatedShield";
 
 const PLACEHOLDERS = [
   "Enter phone number, e.g. +91 98765 43210",
@@ -141,9 +142,7 @@ export default function CheckScreen() {
           ListHeaderComponent={
             <View style={styles.headerSection}>
               <View style={styles.brand}>
-                <View style={[styles.shieldIcon, { backgroundColor: colors.primary + "20", borderColor: colors.primary + "40" }]}>
-                  <Feather name="shield" size={18} color={colors.primary} />
-                </View>
+                <AnimatedShield size={36} />
                 <View>
                   <Text style={[styles.brandName, { color: colors.foreground }]}>SCAM RADAR</Text>
                   <Text style={[styles.brandSub, { color: colors.mutedForeground }]}>India Scam Intelligence Platform</Text>

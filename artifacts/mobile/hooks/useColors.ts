@@ -1,24 +1,21 @@
+import { useContext } from "react";
 import { useColorScheme } from "react-native";
 
 import colors from "@/constants/colors";
+import { ThemeContext } from "@/context/ThemeContext";
 
-/**
- * Returns the design tokens for the current color scheme.
- *
- * The returned object contains all color tokens for the active palette
- * plus scheme-independent values like `radius`.
- *
- * Falls back to the light palette when no dark key is defined in
- * constants/colors.ts (the scaffold ships light-only by default).
- * When a sibling web artifact's dark tokens are synced into a `dark`
- * key, this hook will automatically switch palettes based on the
- * device's appearance setting.
- */
 export function useColors() {
-  const scheme = useColorScheme();
-  const palette =
-    scheme === "dark" && "dark" in colors
-      ? (colors as Record<string, typeof colors.light>).dark
-      : colors.light;
+  // Try to use the ThemeContext if available, fall back to system
+  let themeOverride: "dark" | "light" | null = null;
+  try {
+    const ctx = useContext(ThemeContext);
+    if (ctx) themeOverride = ctx.theme;
+  } catch {
+    // ThemeContext not available yet during boot
+  }
+
+  const systemScheme = useColorScheme();
+  const scheme = themeOverride ?? systemScheme ?? "dark";
+  const palette = scheme === "dark" ? colors.dark : colors.light;
   return { ...palette, radius: colors.radius };
 }
