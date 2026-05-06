@@ -2,7 +2,9 @@ import { logger } from "./logger.js";
 import { store } from "./store.js";
 import {
   getAllPushTokensFromFirebase,
+  getAllFcmTokensFromFirebase,
   removePushTokenFromFirebase,
+  sendFcmNotifications,
 } from "./firebase.js";
 
 interface ExpoPushMessage {
@@ -23,7 +25,7 @@ interface ExpoPushTicket {
   details?: { error?: string };
 }
 
-export async function sendPushNotification(
+export async function sendExpoPushNotification(
   tokens: string[],
   title: string,
   body: string,
@@ -35,10 +37,7 @@ export async function sendPushNotification(
       (t.startsWith("ExponentPushToken[") || t.startsWith("ExpoPushToken["))
   );
 
-  if (validTokens.length === 0) {
-    logger.warn({ total: tokens.length }, "No valid Expo push tokens to send to");
-    return { sent: 0, errors: 0 };
-  }
+  if (validTokens.length === 0) return { sent: 0, errors: 0 };
 
   const messages: ExpoPushMessage[] = validTokens.map((token) => ({
     to: token,
@@ -62,8 +61,7 @@ export async function sendPushNotification(
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      logger.error({ status: response.status, body: text }, "Expo push API error");
+      logger.error({ status: response.status }, "Expo push API error");
       return { sent: 0, errors: validTokens.length };
     }
 
@@ -85,14 +83,13 @@ export async function sendPushNotification(
             await removePushTokenFromFirebase(token);
           }
         }
-        logger.warn({ ticket }, "Push ticket error");
+        logger.warn({ ticket }, "Expo push ticket error");
       }
     }
 
-    logger.info({ sent, errors, total: validTokens.length }, "Push notifications sent");
     return { sent, errors };
   } catch (err) {
-    logger.error({ err }, "Failed to send push notifications");
+    logger.error({ err }, "Failed to send Expo push notifications");
     return { sent: 0, errors: validTokens.length };
   }
 }
@@ -102,17 +99,42 @@ export async function broadcastPush(
   body: string,
   data?: Record<string, unknown>
 ): Promise<{ sent: number; errors: number }> {
-  // Get tokens from Firebase first (persists across restarts), fall back to local store
-  const firebaseTokens = await getAllPushTokensFromFirebase();
-  const localTokens = store.getPushTokens();
+  // Get both FCM tokens (primary) and Expo push tokens (fallback)
+  const [fcmTokens, firebaseExpoTokens, localTokens] = await Promise.all([
+    getAllFcmTokensFromFirebase(),
+    getAllPushTokensFromFirebase(),
+    Promise.resolve(store.getPushTokens()),
+  ]);
 
-  // Merge and deduplicate
-  const allTokens = [...new Set([...firebaseTokens, ...localTokens])];
+  const allExpoTokens = [...new Set([...firebaseExpoTokens, ...localTokens])];
 
   logger.info(
-    { firebaseCount: firebaseTokens.length, localCount: localTokens.length, total: allTokens.length },
+    {
+      fcmCount: fcmTokens.length,
+      expoCount: allExpoTokens.length,
+    },
     "Broadcasting push notification"
   );
 
-  return sendPushNotification(allTokens, title, body, data);
+  // Send via both paths — FCM for native Android/iOS, Expo for dev builds
+  const stringData = data
+    ? Object.fromEntries(
+        Object.entries(data).map(([k, v]) => [k, String(v)])
+      )
+    : undefined;
+
+  const [fcmResult, expoResult] = await Promise.all([
+    sendFcmNotifications(fcmTokens, title, body, stringData),
+    sendExpoPushNotification(allExpoTokens, title, body, data),
+  ]);
+
+  const totalSent = fcmResult.sent + expoResult.sent;
+  const totalErrors = fcmResult.errors + expoResult.errors;
+
+  logger.info(
+    { fcm: fcmResult, expo: expoResult, totalSent, totalErrors },
+    "Broadcast complete"
+  );
+
+  return { sent: totalSent, errors: totalErrors };
 }

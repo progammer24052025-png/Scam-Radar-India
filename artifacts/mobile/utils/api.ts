@@ -86,9 +86,9 @@ export const api = {
       body: JSON.stringify({ token }),
     }),
 
-  registerUser: (uid: string, platform: string, pushToken?: string) =>
+  registerUser: (uid: string, platform: string, pushToken?: string, fcmToken?: string) =>
     request<{ ok: boolean; uid: string }>("/users/register", {
       method: "POST",
-      body: JSON.stringify({ uid, platform, pushToken }),
+      body: JSON.stringify({ uid, platform, pushToken, fcmToken }),
     }),
 };

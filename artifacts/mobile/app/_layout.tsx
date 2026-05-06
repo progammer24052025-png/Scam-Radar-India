@@ -5,6 +5,7 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import { Feather } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
@@ -22,6 +23,7 @@ import { getOrCreateDeviceUid } from "@/utils/storage";
 
 SplashScreen.preventAutoHideAsync();
 
+// Show notifications even when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -38,51 +40,61 @@ async function registerDevice() {
   try {
     const uid = await getOrCreateDeviceUid();
     const platform = Platform.OS;
-    console.log("[ScamRadar] registerDevice start, platform:", platform, "uid:", uid);
 
     let pushToken: string | undefined;
+    let fcmToken: string | undefined;
 
-    // Push tokens only work on native (not web)
     if (platform !== "web") {
+      // Request notification permissions
       const { status: existing } = await Notifications.getPermissionsAsync();
-      console.log("[ScamRadar] notification permission status:", existing);
       const finalStatus =
         existing === "granted"
           ? existing
           : (await Notifications.requestPermissionsAsync()).status;
 
-      console.log("[ScamRadar] final permission status:", finalStatus);
-
       if (finalStatus === "granted") {
-        // Android needs a notification channel
+        // Set up Android notification channel
         if (platform === "android") {
           await Notifications.setNotificationChannelAsync("default", {
             name: "Scam Radar Alerts",
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
             lightColor: "#3B82F6",
-            lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+            lockscreenVisibility:
+              Notifications.AndroidNotificationVisibility.PUBLIC,
             showBadge: true,
           });
         }
 
+        // Try raw FCM device token (works with Firebase Admin Messaging directly)
         try {
-          console.log("[ScamRadar] requesting push token...");
-          const tokenData = await Notifications.getExpoPushTokenAsync();
-          pushToken = tokenData.data;
-          console.log("[ScamRadar] push token obtained:", pushToken ? pushToken.slice(0, 30) + "..." : "null");
-        } catch (tokenErr) {
-          console.warn("[ScamRadar] push token error:", tokenErr);
+          const deviceTokenData = await Notifications.getDevicePushTokenAsync();
+          if (
+            deviceTokenData.data &&
+            typeof deviceTokenData.data === "string" &&
+            deviceTokenData.data.length > 20
+          ) {
+            fcmToken = deviceTokenData.data;
+          }
+        } catch {
+          // Silent — getDevicePushTokenAsync may fail in Expo Go
         }
-      } else {
-        console.warn("[ScamRadar] notification permission denied");
+
+        // Also try Expo push token (works with Expo Push Service in dev builds)
+        try {
+          const tokenData = await Notifications.getExpoPushTokenAsync();
+          if (tokenData.data) {
+            pushToken = tokenData.data;
+          }
+        } catch {
+          // Silent — getExpoPushTokenAsync fails in Expo Go on Android SDK 53+
+        }
       }
     }
 
-    const result = await api.registerUser(uid, platform, pushToken);
-    console.log("[ScamRadar] registerUser result:", JSON.stringify(result));
-  } catch (err) {
-    console.error("[ScamRadar] registerDevice failed:", err);
+    await api.registerUser(uid, platform, pushToken, fcmToken);
+  } catch {
+    // Registration is best-effort — never crash the app
   }
 }
 
@@ -118,6 +130,8 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    // Feather icon font — must be loaded explicitly on Android native
+    ...Feather.font,
   });
 
   useEffect(() => {

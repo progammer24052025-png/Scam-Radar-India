@@ -3,8 +3,8 @@ import admin from "firebase-admin";
 let db: admin.database.Database | null = null;
 let initialized = false;
 
-export function getFirebaseDb(): admin.database.Database | null {
-  if (initialized) return db;
+function init() {
+  if (initialized) return;
   initialized = true;
 
   const serviceAccountJson = process.env["FIREBASE_SERVICE_ACCOUNT"];
@@ -14,7 +14,7 @@ export function getFirebaseDb(): admin.database.Database | null {
 
   if (!serviceAccountJson) {
     console.warn("[firebase] FIREBASE_SERVICE_ACCOUNT not set");
-    return null;
+    return;
   }
 
   try {
@@ -27,16 +27,21 @@ export function getFirebaseDb(): admin.database.Database | null {
     }
     db = admin.database();
     console.info("[firebase] Firebase Admin initialized");
-    return db;
   } catch (err) {
     console.error("[firebase] Failed to initialize Firebase Admin:", err);
-    return null;
   }
+}
+
+export function getFirebaseDb(): admin.database.Database | null {
+  init();
+  return db;
 }
 
 function tokenKey(token: string): string {
   return token.replace(/[.#$[\]]/g, "_");
 }
+
+// ─── User Registration ───────────────────────────────────────────────────────
 
 export async function registerUserInFirebase(
   uid: string,
@@ -64,7 +69,6 @@ export async function getFirebaseUserCount(): Promise<number | null> {
     const snapshot = await database.ref("users").once("value");
     if (!snapshot.exists()) return 0;
     const users = snapshot.val() as Record<string, { platform?: string }>;
-    // only count real native devices
     return Object.values(users).filter(
       (u) => u.platform === "android" || u.platform === "ios"
     ).length;
@@ -73,6 +77,8 @@ export async function getFirebaseUserCount(): Promise<number | null> {
     return null;
   }
 }
+
+// ─── Expo Push Tokens (fallback) ─────────────────────────────────────────────
 
 export async function savePushTokenToFirebase(
   token: string,
@@ -101,6 +107,113 @@ export async function removePushTokenFromFirebase(token: string): Promise<void> 
   }
 }
 
+export async function getAllPushTokensFromFirebase(): Promise<string[]> {
+  const database = getFirebaseDb();
+  if (!database) return [];
+  try {
+    const snapshot = await database.ref("pushTokens").once("value");
+    if (!snapshot.exists()) return [];
+    const data = snapshot.val() as Record<string, { token: string }>;
+    return Object.values(data).map((v) => v.token);
+  } catch (err) {
+    console.error("[firebase] Failed to get push tokens:", err);
+    return [];
+  }
+}
+
+// ─── FCM Tokens (primary) ────────────────────────────────────────────────────
+
+export async function saveFcmTokenToFirebase(
+  uid: string,
+  token: string,
+  platform: string
+): Promise<void> {
+  const database = getFirebaseDb();
+  if (!database) return;
+  try {
+    await database.ref(`fcmTokens/${uid}`).set({
+      token,
+      platform,
+      savedAt: Date.now(),
+    });
+  } catch (err) {
+    console.error("[firebase] Failed to save FCM token:", err);
+  }
+}
+
+export async function removeFcmTokenFromFirebase(uid: string): Promise<void> {
+  const database = getFirebaseDb();
+  if (!database) return;
+  try {
+    await database.ref(`fcmTokens/${uid}`).remove();
+  } catch (err) {
+    console.error("[firebase] Failed to remove FCM token:", err);
+  }
+}
+
+export async function getAllFcmTokensFromFirebase(): Promise<string[]> {
+  const database = getFirebaseDb();
+  if (!database) return [];
+  try {
+    const snapshot = await database.ref("fcmTokens").once("value");
+    if (!snapshot.exists()) return [];
+    const data = snapshot.val() as Record<string, { token: string }>;
+    return Object.values(data).map((v) => v.token);
+  } catch (err) {
+    console.error("[firebase] Failed to get FCM tokens:", err);
+    return [];
+  }
+}
+
+// ─── FCM Send via Firebase Admin Messaging ───────────────────────────────────
+
+export async function sendFcmNotifications(
+  tokens: string[],
+  title: string,
+  body: string,
+  data?: Record<string, string>
+): Promise<{ sent: number; errors: number }> {
+  if (tokens.length === 0) return { sent: 0, errors: 0 };
+  init();
+  try {
+    const messaging = admin.messaging();
+    const response = await messaging.sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default",
+          channelId: "default",
+          notificationCount: 1,
+        },
+      },
+      apns: {
+        payload: { aps: { sound: "default", badge: 1 } },
+      },
+      data: data ?? {},
+    });
+
+    let sent = 0;
+    let errors = 0;
+    for (const result of response.responses) {
+      if (result.success) {
+        sent++;
+      } else {
+        errors++;
+        console.warn("[firebase] FCM send error:", result.error?.message);
+      }
+    }
+    console.info(`[firebase] FCM sent=${sent} errors=${errors} total=${tokens.length}`);
+    return { sent, errors };
+  } catch (err) {
+    console.error("[firebase] FCM sendEachForMulticast failed:", err);
+    return { sent: 0, errors: tokens.length };
+  }
+}
+
+// ─── Cleanup ──────────────────────────────────────────────────────────────────
+
 export async function cleanupGhostDevices(): Promise<number> {
   const database = getFirebaseDb();
   if (!database) return 0;
@@ -120,19 +233,5 @@ export async function cleanupGhostDevices(): Promise<number> {
   } catch (err) {
     console.error("[firebase] Failed to cleanup ghost devices:", err);
     return 0;
-  }
-}
-
-export async function getAllPushTokensFromFirebase(): Promise<string[]> {
-  const database = getFirebaseDb();
-  if (!database) return [];
-  try {
-    const snapshot = await database.ref("pushTokens").once("value");
-    if (!snapshot.exists()) return [];
-    const data = snapshot.val() as Record<string, { token: string }>;
-    return Object.values(data).map((v) => v.token);
-  } catch (err) {
-    console.error("[firebase] Failed to get push tokens:", err);
-    return [];
   }
 }
