@@ -24,12 +24,23 @@ const TEMPLATES = [
   },
 ];
 
+async function clearFcmTokens(token: string) {
+  const res = await fetch("/api/admin/clear-fcm-tokens", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  });
+  if (!res.ok) return { ok: false, cleared: 0 };
+  return res.json() as Promise<{ ok: boolean; cleared: number }>;
+}
+
 export default function Notify({ token }: { token: string }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ sent: number; errors: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [clearResult, setClearResult] = useState<string | null>(null);
 
   const applyTemplate = (tpl: (typeof TEMPLATES)[0]) => {
     setTitle(tpl.title);
@@ -52,18 +63,53 @@ export default function Notify({ token }: { token: string }) {
       setError(err ?? "Failed to send");
     } else {
       setResult({ sent: data.sent, errors: data.errors });
-      setTitle("");
-      setBody("");
+      if (data.sent > 0) {
+        setTitle("");
+        setBody("");
+      }
     }
+  };
+
+  const handleClearTokens = async () => {
+    setClearing(true);
+    setClearResult(null);
+    const data = await clearFcmTokens(token);
+    setClearing(false);
+    setClearResult(
+      data.cleared > 0
+        ? `Cleared ${data.cleared} stale token${data.cleared !== 1 ? "s" : ""} from Firebase.`
+        : "No tokens to clear."
+    );
+    setResult(null);
+    setError(null);
   };
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Broadcast Notification</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Send a push notification to all registered Scam Radar users. This works even when the app is closed.
+          Send a push notification to all registered Scam Radar users via Firebase FCM.
         </p>
+      </div>
+
+      <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+        <p className="text-sm text-yellow-400 font-semibold mb-1">⚠ FCM requires a development build</p>
+        <p className="text-xs text-yellow-400/80 leading-5">
+          <strong>Expo Go SDK 53+ removed FCM support.</strong> Tokens registered through Expo Go use Expo's own Firebase sender ID and will fail with a "SenderId mismatch" error. To receive real FCM notifications, the Android app must be built as a <strong>standalone APK or development build</strong> with your own <code className="bg-yellow-500/20 px-1 rounded">google-services.json</code> included.
+          <br /><br />
+          Until then, use the button below to clear stale Expo Go tokens that are causing send failures.
+        </p>
+        <button
+          onClick={handleClearTokens}
+          disabled={clearing}
+          className="mt-3 px-4 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-xs font-semibold hover:bg-yellow-500/30 transition disabled:opacity-50"
+        >
+          {clearing ? "Clearing…" : "Clear stale FCM tokens"}
+        </button>
+        {clearResult && (
+          <p className="mt-2 text-xs text-yellow-400/80">{clearResult}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -129,18 +175,16 @@ export default function Notify({ token }: { token: string }) {
               Fill with test message
             </button>
 
-            <div className="bg-secondary border border-border rounded-lg p-3">
-              <p className="text-xs text-muted-foreground flex items-start gap-2">
-                <span className="shrink-0">ℹ</span>
-                Sends via Firebase Cloud Messaging (FCM) directly to all registered devices — works even when the app is closed. Requires <code className="bg-muted px-1 rounded">FIREBASE_SERVICE_ACCOUNT</code> secret to be set.
-              </p>
-            </div>
-
             {result && (
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-                <p className="text-sm text-green-400 font-medium">
-                  Sent successfully to {result.sent} device{result.sent !== 1 ? "s" : ""}
-                  {result.errors > 0 ? ` (${result.errors} failed)` : ""}
+              <div className={`rounded-lg p-3 border ${
+                result.sent > 0
+                  ? "bg-green-500/10 border-green-500/30"
+                  : "bg-red-500/10 border-red-500/30"
+              }`}>
+                <p className={`text-sm font-medium ${result.sent > 0 ? "text-green-400" : "text-red-400"}`}>
+                  {result.sent > 0
+                    ? `Sent successfully to ${result.sent} device${result.sent !== 1 ? "s" : ""}${result.errors > 0 ? ` (${result.errors} failed — stale tokens auto-removed)` : ""}`
+                    : `Sent to 0 devices${result.errors > 0 ? ` (${result.errors} failed — stale tokens auto-removed from Firebase)` : ""}. Use "Clear stale FCM tokens" above.`}
                 </p>
               </div>
             )}

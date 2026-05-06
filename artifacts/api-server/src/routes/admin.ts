@@ -2,7 +2,7 @@ import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { broadcastPush } from "../lib/push.js";
 import { store } from "../lib/store.js";
-import { getFirebaseUserCount, getFcmTokenCount, isFirebaseConnected, cleanupGhostDevices } from "../lib/firebase.js";
+import { getFirebaseUserCount, getFcmTokenCount, isFirebaseConnected, cleanupGhostDevices, clearAllFcmTokens } from "../lib/firebase.js";
 import { signAdminToken } from "../lib/jwt.js";
 import { sanitizeShort, sanitizeMedium } from "../lib/sanitize.js";
 import crypto from "crypto";
@@ -93,6 +93,12 @@ router.post("/admin/cleanup", adminAuth, async (req, res) => {
   const removed = await cleanupGhostDevices();
   req.log.info({ removed }, "Ghost devices cleaned up");
   res.json({ ok: true, removed });
+});
+
+router.post("/admin/clear-fcm-tokens", adminAuth, async (req, res) => {
+  const cleared = await clearAllFcmTokens();
+  req.log.info({ cleared }, "FCM tokens cleared");
+  res.json({ ok: true, cleared });
 });
 
 export default router;

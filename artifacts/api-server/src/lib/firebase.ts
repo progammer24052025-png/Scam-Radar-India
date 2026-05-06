@@ -137,6 +137,13 @@ export function isFirebaseConnected(): boolean {
 
 // ─── FCM Send via Firebase Admin Messaging ────────────────────────────────────
 
+const PERMANENT_FCM_ERRORS = new Set([
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+  "messaging/sender-id-mismatch",
+  "messaging/invalid-argument",
+]);
+
 export async function sendFcmNotifications(
   tokens: string[],
   title: string,
@@ -166,19 +173,58 @@ export async function sendFcmNotifications(
 
     let sent = 0;
     let errors = 0;
-    for (const result of response.responses) {
+    const database = getFirebaseDb();
+
+    for (let i = 0; i < response.responses.length; i++) {
+      const result = response.responses[i];
       if (result.success) {
         sent++;
       } else {
         errors++;
-        console.warn("[firebase] FCM send error:", result.error?.message);
+        const code = result.error?.code ?? "";
+        console.warn(`[firebase] FCM send error (${code}):`, result.error?.message);
+
+        // Auto-remove permanently invalid tokens so they don't accumulate
+        if (PERMANENT_FCM_ERRORS.has(code) && database) {
+          try {
+            const snapshot = await database.ref("fcmTokens").once("value");
+            if (snapshot.exists()) {
+              const allTokens = snapshot.val() as Record<string, { token: string }>;
+              for (const [uid, entry] of Object.entries(allTokens)) {
+                if (entry.token === tokens[i]) {
+                  await database.ref(`fcmTokens/${uid}`).remove();
+                  console.info(`[firebase] Auto-removed stale FCM token for uid=${uid} (${code})`);
+                }
+              }
+            }
+          } catch (cleanupErr) {
+            console.warn("[firebase] Failed to remove stale token:", cleanupErr);
+          }
+        }
       }
     }
+
     console.info(`[firebase] FCM sent=${sent} errors=${errors} total=${tokens.length}`);
     return { sent, errors };
   } catch (err) {
     console.error("[firebase] FCM sendEachForMulticast failed:", err);
     return { sent: 0, errors: tokens.length };
+  }
+}
+
+export async function clearAllFcmTokens(): Promise<number> {
+  const database = getFirebaseDb();
+  if (!database) return 0;
+  try {
+    const snapshot = await database.ref("fcmTokens").once("value");
+    if (!snapshot.exists()) return 0;
+    const count = Object.keys(snapshot.val() as object).length;
+    await database.ref("fcmTokens").remove();
+    console.info(`[firebase] Cleared ${count} FCM tokens`);
+    return count;
+  } catch (err) {
+    console.error("[firebase] Failed to clear FCM tokens:", err);
+    return 0;
   }
 }
 
