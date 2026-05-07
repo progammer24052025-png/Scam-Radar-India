@@ -1,0 +1,15 @@
+{
+  "users": {
+    "google_1778078702244": {
+      "uid": "google_1778078702244",
+      "email": "user@gmail.com",
+      "displayName": "Scam Fighter",
+      "points": 0,
+      "reportsSubmitted": 0,
+      "reportsVerified": 0,
+      "reportsRejected": 0,
+      "joinedAt": 1778078702505,
+      "lastActive": 1778078702505
+    }
+  }
+}
