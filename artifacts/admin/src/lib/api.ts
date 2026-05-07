@@ -68,6 +68,24 @@ export interface Stats {
   firebaseConnected: boolean;
 }
 
+export interface LeaderboardUser {
+  uid: string;
+  displayName: string;
+  email: string;
+  points: number;
+  reportsSubmitted: number;
+  reportsVerified: number;
+  reportsRejected: number;
+  joinedAt: number;
+}
+
+export interface Analytics {
+  reportsByDay: { date: string; count: number }[];
+  reportsByCategory: { category: string; count: number }[];
+  reportsByType: { type: string; count: number }[];
+  leaderboard: LeaderboardUser[];
+}
+
 export const adminApi = {
   login: async (password: string) => {
     try {
@@ -126,4 +144,6 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ title, body }),
     }),
+
+  getAnalytics: (token: string) => req<Analytics>("/admin/analytics", token),
 };

@@ -15,6 +15,7 @@ export interface Report {
   status: "pending" | "verified" | "rejected";
   submittedAt: number;
   verifiedAt?: number;
+  submitterUid?: string;
   scamInfo?: {
     title: string;
     description: string;

@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 
 const NAV = [
   { path: "/", label: "Dashboard", icon: "▦" },
+  { path: "/analytics", label: "Analytics", icon: "◈" },
   { path: "/reports", label: "Reports", icon: "⚑" },
   { path: "/alerts", label: "Alerts", icon: "⚠" },
   { path: "/notify", label: "Broadcast", icon: "⌘" },

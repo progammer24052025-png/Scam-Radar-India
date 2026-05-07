@@ -10,6 +10,50 @@
       "reportsRejected": 0,
       "joinedAt": 1778078702505,
       "lastActive": 1778078702505
+    },
+    "test-user-1": {
+      "uid": "test-user-1",
+      "email": "rahul@test.com",
+      "displayName": "Rahul Sharma",
+      "points": 0,
+      "reportsSubmitted": 0,
+      "reportsVerified": 0,
+      "reportsRejected": 0,
+      "joinedAt": 1778126157005,
+      "lastActive": 1778126167913
+    },
+    "test-user-2": {
+      "uid": "test-user-2",
+      "email": "priya@test.com",
+      "displayName": "Priya Patel",
+      "points": 0,
+      "reportsSubmitted": 0,
+      "reportsVerified": 0,
+      "reportsRejected": 0,
+      "joinedAt": 1778126168028,
+      "lastActive": 1778126168028
+    },
+    "verify-user-1": {
+      "uid": "verify-user-1",
+      "email": "amit@test.com",
+      "displayName": "Amit Kumar",
+      "points": 30,
+      "reportsSubmitted": 2,
+      "reportsVerified": 1,
+      "reportsRejected": 0,
+      "joinedAt": 1778126254772,
+      "lastActive": 1778126254772
+    },
+    "reject-user-1": {
+      "uid": "reject-user-1",
+      "email": "reject@test.com",
+      "displayName": "Test Reject",
+      "points": 0,
+      "reportsSubmitted": 2,
+      "reportsVerified": 0,
+      "reportsRejected": 1,
+      "joinedAt": 1778126281984,
+      "lastActive": 1778126281984
     }
   }
 }

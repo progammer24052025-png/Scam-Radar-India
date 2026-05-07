@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Router as WouterRouter, Switch, Route } from "wouter";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import AlertsPage from "@/pages/Alerts";
 import Notify from "@/pages/Notify";
@@ -35,6 +36,7 @@ export default function App() {
         <main className="flex-1 overflow-auto">
           <Switch>
             <Route path="/" component={() => <Dashboard token={token} />} />
+            <Route path="/analytics" component={() => <Analytics token={token} />} />
             <Route path="/reports" component={() => <Reports token={token} />} />
             <Route path="/alerts" component={() => <AlertsPage token={token} />} />
             <Route path="/notify" component={() => <Notify token={token} />} />

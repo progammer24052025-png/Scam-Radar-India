@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { store, type Report } from "../lib/store.js";
+import { userStore, POINTS } from "../lib/userStore.js";
 import { broadcastPush } from "../lib/push.js";
 import { sanitizeShort, sanitizeMedium, sanitizeLong } from "../lib/sanitize.js";
 
@@ -9,17 +10,21 @@ const router = Router();
 const ALLOWED_TYPES = ["phone", "upi", "message"] as const;
 
 router.post("/reports", (req, res) => {
-  const { type, value, category, description } = req.body as {
+  const { type, value, category, description, submitterUid } = req.body as {
     type?: string;
     value?: string;
     category?: string;
     description?: string;
+    submitterUid?: string;
   };
 
   const cleanType = sanitizeShort(type);
   const cleanValue = sanitizeMedium(value);
   const cleanCategory = sanitizeShort(category);
   const cleanDescription = sanitizeLong(description);
+  const cleanUid = submitterUid
+    ? sanitizeShort(submitterUid).replace(/[^a-zA-Z0-9_\-]/g, "").slice(0, 64) || undefined
+    : undefined;
 
   if (!cleanType || !cleanValue) {
     res.status(400).json({ error: "type and value are required" });
@@ -44,9 +49,17 @@ router.post("/reports", (req, res) => {
     description: cleanDescription,
     status: "pending",
     submittedAt: Date.now(),
+    submitterUid: cleanUid,
   };
 
   store.addReport(report);
+
+  // Award +5 points immediately on submission
+  if (cleanUid) {
+    userStore.incrementSubmitted(cleanUid);
+    req.log.info({ reportId: report.id, uid: cleanUid, pts: POINTS.REPORT_SUBMITTED }, "Submission points awarded");
+  }
+
   req.log.info({ reportId: report.id }, "Report submitted");
   res.status(201).json(report);
 });
@@ -81,12 +94,11 @@ router.put("/reports/:id/verify", adminAuth, async (req, res) => {
     return;
   }
 
-  // Award points to the reporter if submitterUid provided
-  const { submitterUid } = req.body as { submitterUid?: string };
-  if (submitterUid && typeof submitterUid === "string") {
-    const { userStore, POINTS } = await import("../lib/userStore.js");
-    userStore.addPoints(submitterUid, POINTS.REPORT_VERIFIED);
-    req.log.info({ submitterUid }, "Awarded verification points");
+  // Award +20 points to reporter — read uid from stored report (no need to re-send from client)
+  const reporterUid = updated.submitterUid ?? (req.body as { submitterUid?: string }).submitterUid;
+  if (reporterUid && typeof reporterUid === "string") {
+    userStore.addPoints(reporterUid, POINTS.REPORT_VERIFIED);
+    req.log.info({ uid: reporterUid, pts: POINTS.REPORT_VERIFIED }, "Verification points awarded");
   }
 
   const pushTitle = "✅ Verified Scam Alert";
@@ -112,6 +124,14 @@ router.put("/reports/:id/reject", adminAuth, (req, res) => {
     res.status(404).json({ error: "Report not found" });
     return;
   }
+
+  // Deduct -10 points from reporter
+  const reporterUid = updated.submitterUid;
+  if (reporterUid) {
+    userStore.addPoints(reporterUid, POINTS.REPORT_REJECTED);
+    req.log.info({ uid: reporterUid, pts: POINTS.REPORT_REJECTED }, "Rejection points deducted");
+  }
+
   res.json(updated);
 });
 

@@ -1,6 +1,71 @@
 {
   "reports": [
     {
+      "id": "mouyihlpfbgegs",
+      "type": "phone",
+      "value": "8877665544",
+      "category": "Other",
+      "description": "Test reject flow",
+      "status": "rejected",
+      "submittedAt": 1778126341021,
+      "submitterUid": "reject-user-1"
+    },
+    {
+      "id": "mouyigwtqvl3nf",
+      "type": "phone",
+      "value": "9988776655",
+      "category": "Bank Scam",
+      "description": "Fake SBI call asking OTP",
+      "status": "verified",
+      "submittedAt": 1778126340125,
+      "submitterUid": "verify-user-1",
+      "verifiedAt": 1778126340481,
+      "scamInfo": {
+        "title": "SBI OTP Scam",
+        "description": "Fake SBI call",
+        "modus": "OTP phishing",
+        "severity": "HIGH"
+      }
+    },
+    {
+      "id": "mouyh82z4z48ca",
+      "type": "phone",
+      "value": "9123456789",
+      "category": "Other",
+      "description": "Testing reject",
+      "status": "pending",
+      "submittedAt": 1778126282027,
+      "submitterUid": "reject-user-1"
+    },
+    {
+      "id": "mouygn2vnkirk5",
+      "type": "upi",
+      "value": "scammer@ybl",
+      "category": "UPI Fraud",
+      "description": "Fake UPI collection request pretending to be Amazon refund",
+      "status": "pending",
+      "submittedAt": 1778126254807,
+      "submitterUid": "verify-user-1"
+    },
+    {
+      "id": "mouyes5jisjsyb",
+      "type": "phone",
+      "value": "9876543210",
+      "category": "UPI Fraud",
+      "description": "Fake UPI payment request",
+      "status": "pending",
+      "submittedAt": 1778126168071
+    },
+    {
+      "id": "mouyejng65rhrj",
+      "type": "phone",
+      "value": "9876543210",
+      "category": "UPI Fraud",
+      "description": "Fake UPI payment request",
+      "status": "pending",
+      "submittedAt": 1778126157052
+    },
+    {
       "id": "mou69dpr3kbw3u",
       "type": "phone",
       "value": "2356412354",
