@@ -24,6 +24,11 @@ function timingSafeEqual(a: string, b: string): boolean {
   }
 }
 
+router.get("/admin/password-hint", (_req, res) => {
+  const adminPassword = process.env["ADMIN_PASSWORD"] ?? "scamradar-admin-2024";
+  res.json({ password: adminPassword });
+});
+
 router.post("/admin/login", (req, res) => {
   const { password } = req.body as { password?: string };
 

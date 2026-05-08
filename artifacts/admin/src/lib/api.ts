@@ -87,6 +87,17 @@ export interface Analytics {
 }
 
 export const adminApi = {
+  getPasswordHint: async (): Promise<string | null> => {
+    try {
+      const res = await fetch(`${BASE}/admin/password-hint`);
+      if (!res.ok) return null;
+      const data = (await res.json()) as { password: string };
+      return data.password ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   login: async (password: string) => {
     try {
       const res = await fetch(`${BASE}/admin/login`, {

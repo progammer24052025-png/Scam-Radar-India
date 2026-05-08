@@ -108,3 +108,4 @@ externalPort = 3003
 
 [userenv.shared]
 ADMIN_PASSWORD = "admin1234"
+CI = "1"

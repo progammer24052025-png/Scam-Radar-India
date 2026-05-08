@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { adminApi } from "@/lib/api";
 
 export default function Login({ onLogin }: { onLogin: (token: string) => void }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    adminApi.getPasswordHint().then(setCurrentPassword);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,11 +75,28 @@ export default function Login({ onLogin }: { onLogin: (token: string) => void })
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center">
-              Set <code className="text-primary">ADMIN_PASSWORD</code> env var to change the password.
-            </p>
-          </div>
+          {currentPassword && (
+            <div className="mt-5 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Current password</p>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showPassword ? "Hide" : "Reveal"}
+                </button>
+              </div>
+              {showPassword && (
+                <div className="mt-1.5 px-3 py-2 rounded-lg bg-secondary border border-border font-mono text-sm text-foreground select-all">
+                  {currentPassword}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Change it by setting the <code className="text-primary">ADMIN_PASSWORD</code> env var.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
