@@ -18,11 +18,17 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "YOUR_DEPLOYED_URL_HERE"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "YOUR_DEPLOYED_URL_HERE"
       }
     }
   },

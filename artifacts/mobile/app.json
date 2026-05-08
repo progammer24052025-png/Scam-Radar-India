@@ -29,8 +29,7 @@
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -52,7 +51,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "scamradar-india"
+        "projectId": "YOUR_EAS_PROJECT_ID_HERE"
       }
     }
   }
