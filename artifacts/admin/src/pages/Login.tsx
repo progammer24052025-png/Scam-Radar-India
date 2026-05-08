@@ -14,7 +14,7 @@ export default function Login({ onLogin }: { onLogin: (token: string) => void })
     const { data, error: err } = await adminApi.login(password);
     setLoading(false);
     if (err || !data) {
-      setError("Invalid password. Please try again.");
+      setError(err ?? "Login failed. Please try again.");
       return;
     }
     onLogin(data.token);

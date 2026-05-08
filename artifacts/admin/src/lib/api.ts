@@ -94,11 +94,14 @@ export const adminApi = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      if (!res.ok) return { data: null, error: "Invalid password" };
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        return { data: null, error: body.error ?? `HTTP ${res.status}: Invalid password` };
+      }
       const data = (await res.json()) as { token: string };
       return { data, error: null };
-    } catch {
-      return { data: null, error: "Connection failed" };
+    } catch (e) {
+      return { data: null, error: e instanceof Error ? `Network error: ${e.message}` : "Connection failed" };
     }
   },
 
