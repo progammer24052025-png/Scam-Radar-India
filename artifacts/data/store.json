@@ -1,6 +1,16 @@
 {
   "reports": [
     {
+      "id": "mowjks8kqo2pyh",
+      "type": "phone",
+      "value": "9999999999",
+      "category": "UPI Fraud",
+      "description": "Test scam report from mobile app",
+      "status": "pending",
+      "submittedAt": 1778222186228,
+      "submitterUid": "test-user-1"
+    },
+    {
       "id": "mouyihlpfbgegs",
       "type": "phone",
       "value": "8877665544",
