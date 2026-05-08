@@ -32,13 +32,13 @@ args = "Start Admin"
 name = "Start Mobile"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=18115 BASE_PATH=/ pnpm --filter @workspace/mobile run dev"
-waitForPort = 18115
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "PORT=3000 pnpm --filter @workspace/mobile run dev"
+waitForPort = 3000
 
 [[workflows.workflow]]
 name = "Start API"
@@ -56,16 +56,16 @@ waitForPort = 8080
 name = "Start Admin"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=23744 BASE_PATH=/admin/ pnpm --filter @workspace/admin run dev"
-waitForPort = 23744
-
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/admin run dev"
+waitForPort = 5000
+
 [agent]
-stack = "PNPM_WORKSPACE"
+stack = "BEST_EFFORT_FALLBACK"
 expertMode = true
 
 [postMerge]
@@ -73,12 +73,16 @@ path = "scripts/post-merge.sh"
 timeoutMs = 20000
 
 [[ports]]
-localPort = 8080
-externalPort = 8080
+localPort = 3000
+externalPort = 3000
 
 [[ports]]
-localPort = 8081
+localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [[ports]]
 localPort = 8082
