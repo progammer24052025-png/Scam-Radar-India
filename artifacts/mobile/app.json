@@ -28,8 +28,12 @@
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
-      ]
+<<<<<<< HEAD
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "googleServicesFile": "./google-services.json"
+>>>>>>> 2e63fa0 (Save local Expo and EAS configuration changes)
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -51,8 +55,13 @@
     },
     "extra": {
       "eas": {
+<<<<<<< HEAD
         "projectId": "YOUR_EAS_PROJECT_ID_HERE"
+=======
+        "projectId": "ba6a79b5-a855-4327-8b5a-012a975d3130"
+>>>>>>> 2e63fa0 (Save local Expo and EAS configuration changes)
       }
-    }
+    },
+    "owner": "test12-34"
   }
 }

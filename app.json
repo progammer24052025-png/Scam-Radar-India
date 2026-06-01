@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "984ce191-87af-4971-977a-684aea3c4c33"
+      }
+    },
+    "android": {
+      "package": "com.scamradar.india"
+    }
+  }
+}
